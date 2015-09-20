@@ -41,8 +41,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="EdgeInfo.cs" />
+    <Compile Include="HydroEdge.cs" />
     <Compile Include="HydroObject.cs" />
     <Compile Include="HydroObjectGraph.cs" />
+    <Compile Include="HydroVertex.cs" />
     <Compile Include="IIsEdge.cs" />
     <Compile Include="IIsVertex.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
