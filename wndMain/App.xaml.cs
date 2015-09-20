@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace wndMain
+namespace HydroSystemModelPreProcess
 {
     /// <summary>
     /// App.xaml 的交互逻辑

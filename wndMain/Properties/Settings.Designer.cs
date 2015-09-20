@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace wndMain.Properties
+namespace HydroSystemModelPreProcess.Properties
 {
 
 

@@ -1,7 +1,7 @@
-﻿<Application x:Class="wndMain.App"
+﻿<Application x:Class="HydroSystemModelPreProcess.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:wndMain"
+             xmlns:local="clr-namespace:HydroSystemModelPreProcess"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
          
