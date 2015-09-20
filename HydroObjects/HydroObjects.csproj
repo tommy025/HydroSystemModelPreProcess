@@ -7,7 +7,7 @@
     <ProjectGuid>{2C22858E-36A2-4AE6-841D-C3302C554E47}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>HydroObjects</RootNamespace>
+    <RootNamespace>HydroSystemModelPreProcess.HydroObjects</RootNamespace>
     <AssemblyName>HydroObjects</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -40,7 +40,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EdgeInfo.cs" />
+    <Compile Include="HydroObject.cs" />
+    <Compile Include="HydroObjectGraph.cs" />
+    <Compile Include="IIsEdge.cs" />
+    <Compile Include="IIsVertex.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="VertexInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
