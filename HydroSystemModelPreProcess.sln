@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UI", "wndMain\UI.csproj", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HydroObjects", "HydroObjects\HydroObjects.csproj", "{2C22858E-36A2-4AE6-841D-C3302C554E47}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTest", "UnitTest\UnitTest.csproj", "{9B936360-4024-4FD8-A355-C8367D4C8A4A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{2C22858E-36A2-4AE6-841D-C3302C554E47}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2C22858E-36A2-4AE6-841D-C3302C554E47}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2C22858E-36A2-4AE6-841D-C3302C554E47}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9B936360-4024-4FD8-A355-C8367D4C8A4A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9B936360-4024-4FD8-A355-C8367D4C8A4A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B936360-4024-4FD8-A355-C8367D4C8A4A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9B936360-4024-4FD8-A355-C8367D4C8A4A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
