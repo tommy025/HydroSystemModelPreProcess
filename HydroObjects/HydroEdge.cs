@@ -6,14 +6,7 @@ using System.Threading.Tasks;
 
 namespace HydroSystemModelPreProcess.HydroObjects
 {
-    public abstract class HydroEdge : HydroObject, IIsEdge
+    public abstract class HydroEdge : HydroObject
     {
-        private EdgeInfo edgeInfo;
-
-        EdgeInfo IIsEdge.EdgeInfo
-        {
-            get { return edgeInfo; }
-            set { edgeInfo = value; }
-        }
     }
 }

@@ -6,8 +6,7 @@ using System.Threading.Tasks;
 
 namespace HydroSystemModelPreProcess.HydroObjects
 {
-    public interface IIsEdge
+    public class PressurePipe : HydroEdge
     {
-        EdgeInfo EdgeInfo { get; set; }
     }
 }

@@ -6,15 +6,8 @@ using System.Threading.Tasks;
 
 namespace HydroSystemModelPreProcess.HydroObjects
 {
-    public abstract class HydroVertex : HydroObject, IIsVertex
+    public abstract class HydroVertex : HydroObject
     {
-        private VertexInfo vertexInfo;
-
-        VertexInfo IIsVertex.VertexInfo
-        {
-            get { return vertexInfo; }
-            set { vertexInfo = value; }
-        }
 
     }
 }

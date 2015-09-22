@@ -6,8 +6,7 @@ using System.Threading.Tasks;
 
 namespace HydroSystemModelPreProcess.HydroObjects
 {
-    public interface IIsVertex
+    public class ConnectNode : HydroVertex
     {
-        VertexInfo VertexInfo { get; set; }
     }
 }

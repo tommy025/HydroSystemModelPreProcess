@@ -40,15 +40,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="EdgeInfo.cs" />
+    <Compile Include="ConnectNode.cs" />
+    <Compile Include="HydroEdgeInfo.cs" />
     <Compile Include="HydroEdge.cs" />
     <Compile Include="HydroObject.cs" />
     <Compile Include="HydroObjectGraph.cs" />
     <Compile Include="HydroVertex.cs" />
-    <Compile Include="IIsEdge.cs" />
-    <Compile Include="IIsVertex.cs" />
+    <Compile Include="PressurePipe.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="VertexInfo.cs" />
+    <Compile Include="HydroVertexInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
