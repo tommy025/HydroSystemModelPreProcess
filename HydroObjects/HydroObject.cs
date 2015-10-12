@@ -16,14 +16,24 @@ using System.Windows.Shapes;
 
 namespace HydroSystemModelPreProcess.HydroObjects
 {
-    public abstract class HydroObject : Visual, INotifyPropertyChanged
+    public abstract class HydroObject : INotifyPropertyChanged
     {
+        protected const string rdictSource = "generic.xaml";
+
+        protected readonly ResourceDictionary rdict;
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         protected void TriggerPropertyChangedEvent(PropertyChangedEventArgs e)
         {
             if (PropertyChanged != null)
                 PropertyChanged(this, e);
+        }
+
+        public HydroObject()
+        {
+            rdict = new ResourceDictionary();
+            rdict.Source = new Uri(rdictSource, UriKind.Relative);
         }
     }
 }
