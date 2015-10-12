@@ -23,6 +23,8 @@ namespace HydroSystemModelPreProcess
         public MainWindow()
         {
             InitializeComponent();
+            var test = new HydroSystemModelPreProcess.UnitTest.HydroObjectUnitTest();
+            test.TestHydroObjectGrap_Modify();
         }
     }
 }

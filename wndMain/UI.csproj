@@ -100,6 +100,10 @@
       <Project>{2c22858e-36a2-4ae6-841d-c3302c554e47}</Project>
       <Name>HydroObjects</Name>
     </ProjectReference>
+    <ProjectReference Include="..\UnitTest\UnitTest.csproj">
+      <Project>{9b936360-4024-4fd8-a355-c8367d4c8a4a}</Project>
+      <Name>UnitTest</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -64,11 +64,21 @@ namespace HydroSystemModelPreProcess.HydroObjects
                     select (HydroVertex)o).ToArray();
         }
 
+        public HydroVertex[] GetVertexs(HydroEdge edge)
+        {
+            return hydroEdges[edge].GetVertexs();
+        }
+
         public HydroEdge[] GetEdges()
         {
             return (from o in hydroObjects
                     where o is HydroEdge
                     select (HydroEdge)o).ToArray();
+        }
+
+        public HydroEdge[] GetEdges(HydroVertex vertex)
+        {
+            return hydroVertexs[vertex].ToArray();
         }
 
         public void Add(HydroObject item)
