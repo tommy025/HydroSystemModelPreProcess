@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using HydroSystemModelPreProcess.HydroObjects;
 
 namespace HydroSystemModelPreProcess
 {
@@ -23,8 +24,13 @@ namespace HydroSystemModelPreProcess
         public MainWindow()
         {
             InitializeComponent();
-            var test = new HydroSystemModelPreProcess.UnitTest.HydroObjectUnitTest();
-            test.TestHydroObjectGrap_Modify();
+
+            var hydroObjectGraph = new HydroObjectGraph();
+            var node = hydroObjectGraph.AddConnectNode();
+
+            Canvas.SetTop(node, 100);
+            Canvas.SetLeft(node, 100);
+            drawingCanvas.Children.Add(node);
         }
     }
 }

@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:HydroSystemModelPreProcess"
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525">
-    <Grid>
-        
-    </Grid>
+    <Canvas x:Name="drawingCanvas">
+
+    </Canvas>
 </Window>

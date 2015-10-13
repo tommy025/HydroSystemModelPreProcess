@@ -18,9 +18,9 @@ namespace HydroSystemModelPreProcess.HydroObjects
 {
     public abstract class HydroObject : INotifyPropertyChanged
     {
-        protected const string rdictSource = "generic.xaml";
+        protected const string rdictSource = "HydroObjects;component/generic.xaml";
 
-        protected readonly ResourceDictionary rdict;
+        protected static readonly ResourceDictionary rdict;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -30,7 +30,7 @@ namespace HydroSystemModelPreProcess.HydroObjects
                 PropertyChanged(this, e);
         }
 
-        public HydroObject()
+        static HydroObject()
         {
             rdict = new ResourceDictionary();
             rdict.Source = new Uri(rdictSource, UriKind.Relative);

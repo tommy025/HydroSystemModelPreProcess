@@ -1,5 +1,33 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:local="clr-namespace:HydroSystemModelPreProcess.HydroObjects">
-    <Pen x:Key="DefaultEdgePen" Brush="Black" Thickness="5"></Pen>
+    <Line x:Key="PressurePipe" Fill="Black" StrokeThickness="5">
+        <Line.Style>
+            <Style>
+                <Style.Triggers>
+                    <Trigger Property="Line.Tag" Value="Selected">
+                        <Setter Property="Line.Stroke" Value="Red"></Setter>
+                        <Setter Property="Line.StrokeThickness" Value="8"></Setter>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+        </Line.Style>
+    </Line>
+
+    <Border x:Key="ConnectNodeIcon">
+        <Grid>
+            <Image Source="Icons/ConnectNodeIcon.bmp"></Image>
+        </Grid>
+
+        <Border.Style>
+            <Style>
+                <Style.Triggers>
+                    <Trigger Property="Border.Tag" Value="Selected">
+                        <Setter Property="Border.BorderBrush" Value="Red"></Setter>
+                        <Setter Property="Border.BorderThickness" Value="5"></Setter>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+        </Border.Style>
+    </Border>
 </ResourceDictionary>

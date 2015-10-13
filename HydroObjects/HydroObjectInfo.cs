@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -16,9 +15,14 @@ using System.Windows.Shapes;
 
 namespace HydroSystemModelPreProcess.HydroObjects
 {
-    public abstract class HydroVertex : HydroObject
+    internal abstract class HydroObjectInfo
     {
-        public abstract FrameworkElement VertexVisualElement
-        { get; }
+        public virtual FrameworkElement DrawingElement
+        { get; set; }
+
+        public HydroObjectInfo(FrameworkElement element)
+        {
+            DrawingElement = element;
+        }
     }
 }

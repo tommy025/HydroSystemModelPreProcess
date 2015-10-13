@@ -18,12 +18,9 @@ namespace HydroSystemModelPreProcess.HydroObjects
 {
     public abstract class HydroEdge : HydroObject
     {
-        public virtual Pen DrawingPen
-        {
-            get
-            {
-                return (Pen)rdict["DefaultEdgePen"];
-            }
-        }
+        public abstract FrameworkElement EdgeVisualElement
+        { get; }
+            
+        
     }
 }

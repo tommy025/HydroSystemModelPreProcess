@@ -6,6 +6,15 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
 
 namespace HydroSystemModelPreProcess.HydroObjects
 {
@@ -154,9 +163,9 @@ namespace HydroSystemModelPreProcess.HydroObjects
         private void RegisterHydroObjectToDictionary(HydroObject item)
         {
             if (item is HydroEdge)
-                hydroEdges.Add((HydroEdge)item, new HydroEdgeInfo());
+                hydroEdges.Add((HydroEdge)item, new HydroEdgeInfo(((HydroEdge)item).EdgeVisualElement));
             else if (item is HydroVertex)
-                hydroVertexs.Add((HydroVertex)item, new HydroVertexInfo());
+                hydroVertexs.Add((HydroVertex)item, new HydroVertexInfo(((HydroVertex)item).VertexVisualElement));
             else
                 throw new ArgumentException("Unsupported type '" + item.GetType().ToString() +
                     "' when adding to HydroObjectGraph!");
@@ -275,6 +284,54 @@ namespace HydroSystemModelPreProcess.HydroObjects
                         select e).First().Key;
 
             DisConnectVertexs(edge);
+        }
+
+        public HydroObject GetHydroObjectByElement(FrameworkElement element)
+        {
+            HydroObject hydroObject = hydroVertexs.First(kvp => { return kvp.Value.DrawingElement == element; }).Key;
+            if (hydroObject != null)
+                return hydroObject;
+
+            hydroObject = hydroEdges.First(kvp => { return kvp.Value.DrawingElement == element; }).Key;
+            if (hydroObject != null)
+                return hydroObject;
+            else
+                throw new ArgumentException("HydroObject of given visual object not found!");
+        }
+
+        public FrameworkElement GetElementByHydroObject(HydroObject hydroObject)
+        {
+            try
+            {
+                if (hydroObject is HydroEdge)
+                    return hydroEdges[(HydroEdge)hydroObject].DrawingElement;
+                else if (hydroObject is HydroVertex)
+                    return hydroVertexs[(HydroVertex)hydroObject].DrawingElement;
+                else
+                    throw new ArgumentException("Unsupported type '" + hydroObject.GetType().ToString() +
+                        "' when getting Visual by HydroObject!");
+            }
+            catch (KeyNotFoundException)
+            {
+                throw new ArgumentException("HydroObject not found!");
+            }
+        }
+
+        public FrameworkElement AddPressurePipe(HydroVertex vertex1, HydroVertex vertex2)
+        {
+            var pPipe = new PressurePipe();
+
+            Add(pPipe);
+            ConnectVertexs(pPipe, vertex1, vertex2);
+            return GetElementByHydroObject(pPipe);
+        }
+
+        public FrameworkElement AddConnectNode()
+        {
+            var cNode = new ConnectNode();
+
+            Add(cNode);
+            return GetElementByHydroObject(cNode);
         }
     }
 }

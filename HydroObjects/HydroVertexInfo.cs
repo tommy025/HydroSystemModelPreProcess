@@ -5,12 +5,13 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace HydroSystemModelPreProcess.HydroObjects
 {
-    internal class HydroVertexInfo : ICollection<HydroEdge>
+    internal class HydroVertexInfo : HydroObjectInfo, ICollection<HydroEdge>
     {
-        public HydroVertexInfo()
+        public HydroVertexInfo(FrameworkElement element) : base(element)
         {
             edges = new List<HydroEdge>();
         }       
