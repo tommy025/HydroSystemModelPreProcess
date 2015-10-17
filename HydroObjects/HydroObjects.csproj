@@ -55,10 +55,10 @@
     <Compile Include="HydroVertexInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="generic.xaml">
+    <Page Include="generic.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
-    </Resource>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Icons\ConnectNodeIcon.bmp" />

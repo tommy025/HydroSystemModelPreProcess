@@ -1,9 +1,15 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:local="clr-namespace:HydroSystemModelPreProcess.HydroObjects">
-    <Line x:Key="PressurePipe" Fill="Black" StrokeThickness="5">
+    <Line x:Key="PressurePipe" x:Shared="false">
         <Line.Style>
             <Style>
+                <Style.Setters>
+                    <Setter Property="Line.Stroke" Value="Black"></Setter>
+                    <Setter Property="Line.StrokeThickness" Value="5"></Setter>
+                </Style.Setters>
+                
+                
                 <Style.Triggers>
                     <Trigger Property="Line.Tag" Value="Selected">
                         <Setter Property="Line.Stroke" Value="Red"></Setter>
@@ -13,21 +19,47 @@
             </Style>
         </Line.Style>
     </Line>
-
-    <Border x:Key="ConnectNodeIcon">
-        <Grid>
-            <Image Source="Icons/ConnectNodeIcon.bmp"></Image>
-        </Grid>
+  
+    <!--
+    <Border x:Key="ConnectNodeIcon" x:Shared="false">
+        <Image Source="Icons/ConnectNodeIcon.bmp" 
+               Canvas.Left="{Binding Path=(Canvas.Left), Mode=TwoWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Border}}}"
+               Canvas.Top="{Binding Path=(Canvas.Top), Mode=TwoWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Border}}}"
+               Tag="{Binding Path=Tag, Mode=TwoWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Border}}}"></Image>
 
         <Border.Style>
             <Style>
+                <Style.Setters>
+                    <Setter Property="Border.BorderThickness" Value="5"></Setter>
+                </Style.Setters>
+                
                 <Style.Triggers>
                     <Trigger Property="Border.Tag" Value="Selected">
                         <Setter Property="Border.BorderBrush" Value="Red"></Setter>
-                        <Setter Property="Border.BorderThickness" Value="5"></Setter>
                     </Trigger>
                 </Style.Triggers>
             </Style>
         </Border.Style>
     </Border>
+    -->
+    
+    <Rectangle x:Key="ConnectNodeIcon" x:Shared="false" Height="64" Width="64">
+        <Rectangle.Fill>
+            <ImageBrush ImageSource="Icons/ConnectNodeIcon.bmp" Stretch="Fill"></ImageBrush>
+        </Rectangle.Fill>
+
+        <Rectangle.Style>
+            <Style>
+                <Style.Setters>
+                    <Setter Property="Rectangle.StrokeThickness" Value="5"></Setter>
+                </Style.Setters>
+
+                <Style.Triggers>
+                    <Trigger Property="Rectangle.Tag" Value="Selected">
+                        <Setter Property="Rectangle.Stroke" Value="Red"></Setter>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+        </Rectangle.Style>
+    </Rectangle>
 </ResourceDictionary>

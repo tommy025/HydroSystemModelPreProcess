@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Shapes;
 
 namespace HydroSystemModelPreProcess.HydroObjects
 {
@@ -15,7 +16,7 @@ namespace HydroSystemModelPreProcess.HydroObjects
         {
             get
             {
-                return (Border)rdict["ConnectNodeIcon"];
+                return (Rectangle)rdict["ConnectNodeIcon"];
             }
         }
     }

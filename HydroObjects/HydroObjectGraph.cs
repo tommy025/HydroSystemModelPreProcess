@@ -296,7 +296,7 @@ namespace HydroSystemModelPreProcess.HydroObjects
             if (hydroObject != null)
                 return hydroObject;
             else
-                throw new ArgumentException("HydroObject of given visual object not found!");
+                return null;
         }
 
         public FrameworkElement GetElementByHydroObject(HydroObject hydroObject)

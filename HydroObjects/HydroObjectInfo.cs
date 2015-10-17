@@ -17,12 +17,5 @@ namespace HydroSystemModelPreProcess.HydroObjects
 {
     internal abstract class HydroObjectInfo
     {
-        public virtual FrameworkElement DrawingElement
-        { get; set; }
-
-        public HydroObjectInfo(FrameworkElement element)
-        {
-            DrawingElement = element;
-        }
     }
 }

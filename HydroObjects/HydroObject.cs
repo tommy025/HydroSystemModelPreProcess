@@ -33,7 +33,7 @@ namespace HydroSystemModelPreProcess.HydroObjects
         static HydroObject()
         {
             rdict = new ResourceDictionary();
-            rdict.Source = new Uri(rdictSource, UriKind.Relative);
+            rdict.Source = new Uri(rdictSource, UriKind.RelativeOrAbsolute);
         }
     }
 }

@@ -5,8 +5,116 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:HydroSystemModelPreProcess"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
-    <Canvas x:Name="drawingCanvas">
+        Title="MainWindow" Height="350" Width="525" Loaded="Window_Loaded">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"></RowDefinition>
+            <RowDefinition Height="auto"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+            <RowDefinition Height="auto"></RowDefinition>
+        </Grid.RowDefinitions>
 
-    </Canvas>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"></ColumnDefinition>
+            <ColumnDefinition Width="*"></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+        
+        <Menu Grid.Row="0" Grid.ColumnSpan="2" Name="mnuMain">
+            <MenuItem Header="文件(_F)">
+                <MenuItem Header="新建(_N)"/>
+                <MenuItem Header="打开(_O)..."/>
+                <MenuItem Header="保存(_S)"/>
+                <MenuItem Header="另存为(_A)..."/>
+                <Separator/>
+                <MenuItem Header="打印(_P)..."/>
+                <MenuItem Header="打印预览(_V)"/>
+                <MenuItem Header="打印设置(_N)..."/>
+                <Separator/>
+                <MenuItem Header="退出(_X)"/>
+            </MenuItem>
+            <MenuItem Header="编辑(_E)">
+                <MenuItem Header="撤销(_U)"/>
+                <MenuItem Header="重做(_R)"/>
+                <Separator/>
+                <MenuItem Header="删除(_D)"/>
+                <Separator/>
+                <MenuItem Header="全选(_A)"/>
+                <MenuItem Header="选中所有管道(_I)"/>
+                <MenuItem Header="选中所有节点(_N)"/>
+            </MenuItem>
+            <MenuItem Header="查看(_V)">
+                <MenuItem Header="工具栏(_T)" IsCheckable="True"/>
+                <MenuItem Header="状态栏(_S)"/>
+            </MenuItem>
+            <MenuItem Header="查询(_Q)">
+                <MenuItem Header="管道属性列表"/>
+                <Separator/>
+                <MenuItem Header="当前工作点查询"/>
+                <MenuItem Header="机组恒定流结果列表"/>
+                <MenuItem Header="机组非恒定流详细信息"/>
+                <MenuItem Header="机组非恒定流极值列表"/>
+                <Separator/>
+                <MenuItem Header="调压室非恒定流结果列表"/>
+                <MenuItem Header="沿管线压力分布"/>
+            </MenuItem>
+            <MenuItem Header="帮助(_H)">
+                <MenuItem Header="关于 水电站过渡过程计算软件(_A)..."/>
+                <MenuItem Header="帮助"/>
+            </MenuItem>
+        </Menu>
+
+        <StatusBar Grid.Row="3" Grid.ColumnSpan="2" x:Name="stbStatus">
+            <StatusBar.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                    </Grid>
+                </ItemsPanelTemplate>
+            </StatusBar.ItemsPanel>
+
+            <StatusBarItem Grid.Column="0" HorizontalAlignment="Left">
+                <Label Content="帮助说明">
+                    <Label.Template>
+                        <ControlTemplate TargetType="Label">
+                            <TextBlock>
+                            <ContentPresenter/>
+                            </TextBlock>
+                        </ControlTemplate>
+                    </Label.Template>
+                </Label>
+            </StatusBarItem>
+            <StatusBarItem Grid.Column="1" HorizontalAlignment="Right">
+                <Label Content="坐标">
+                    <Label.Template>
+                        <ControlTemplate TargetType="Label">
+                            <TextBlock>
+                            <ContentPresenter/>
+                            </TextBlock>
+                        </ControlTemplate>
+                    </Label.Template>
+                </Label>
+            </StatusBarItem>
+        </StatusBar>
+
+        <ToolBarTray Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal">
+            <ToolBar ToolBarTray.IsLocked="True" x:Name="tlbHorizontal"></ToolBar>
+        </ToolBarTray>
+
+        <ToolBarTray Grid.Row="2" Grid.Column="0" Orientation="Vertical">
+            <ToolBar ToolBarTray.IsLocked="True" x:Name="tlbVertical">
+                <RadioButton x:Name="rbtnPointer" IsChecked="True">指针</RadioButton>
+                <RadioButton x:Name="rbtnPPipe">管道</RadioButton>
+                <RadioButton x:Name="rbtnCNode">节点</RadioButton>
+            </ToolBar>
+        </ToolBarTray>
+
+        <Canvas x:Name="drawingCanvas" Grid.Row="2" Grid.Column="1"
+                Background="White" ClipToBounds="True"
+                MouseLeftButtonDown="drawingCanvas_MouseLeftButtonDown" 
+                MouseLeftButtonUp="drawingCanvas_MouseLeftButtonUp" 
+                MouseMove="drawingCanvas_MouseMove"/>     
+    </Grid>
 </Window>

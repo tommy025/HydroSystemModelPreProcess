@@ -11,7 +11,7 @@ namespace HydroSystemModelPreProcess.HydroObjects
 {
     internal class HydroVertexInfo : HydroObjectInfo, ICollection<HydroEdge>
     {
-        public HydroVertexInfo(FrameworkElement element) : base(element)
+        public HydroVertexInfo()
         {
             edges = new List<HydroEdge>();
         }       
