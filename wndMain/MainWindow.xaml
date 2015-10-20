@@ -105,16 +105,13 @@
 
         <ToolBarTray Grid.Row="2" Grid.Column="0" Orientation="Vertical">
             <ToolBar ToolBarTray.IsLocked="True" x:Name="tlbVertical">
-                <RadioButton x:Name="rbtnPointer" IsChecked="True">指针</RadioButton>
-                <RadioButton x:Name="rbtnPPipe">管道</RadioButton>
-                <RadioButton x:Name="rbtnCNode">节点</RadioButton>
+                <RadioButton x:Name="rbtnPointer" Command="local:MainWindow.ChangeState">指针</RadioButton>
+                <RadioButton x:Name="rbtnPPipe" Command="local:MainWindow.ChangeState">管道</RadioButton>
+                <RadioButton x:Name="rbtnCNode" Command="local:MainWindow.ChangeState">节点</RadioButton>
             </ToolBar>
         </ToolBarTray>
 
         <Canvas x:Name="drawingCanvas" Grid.Row="2" Grid.Column="1"
-                Background="White" ClipToBounds="True"
-                MouseLeftButtonDown="drawingCanvas_MouseLeftButtonDown" 
-                MouseLeftButtonUp="drawingCanvas_MouseLeftButtonUp" 
-                MouseMove="drawingCanvas_MouseMove"/>     
+                Background="White" ClipToBounds="True"/>     
     </Grid>
 </Window>
