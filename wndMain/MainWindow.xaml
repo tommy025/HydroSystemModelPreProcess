@@ -106,6 +106,9 @@
         <ToolBarTray Grid.Row="2" Grid.Column="0" Orientation="Vertical">
             <ToolBar ToolBarTray.IsLocked="True" x:Name="tlbVertical">
                 <RadioButton x:Name="rbtnPointer" Command="local:MainWindow.ChangeState">指针</RadioButton>
+                <RadioButton x:Name="rbtnDelete" Command="local:MainWindow.ChangeState">删除</RadioButton>
+                <RadioButton x:Name="rbtnReConn" Command="local:MainWindow.ChangeState">重连</RadioButton>
+                <RadioButton x:Name="rbtnShiftScr" Command="local:MainWindow.ChangeState">移屏</RadioButton>
                 <RadioButton x:Name="rbtnPPipe" Command="local:MainWindow.ChangeState">管道</RadioButton>
                 <RadioButton x:Name="rbtnCNode" Command="local:MainWindow.ChangeState">节点</RadioButton>
             </ToolBar>

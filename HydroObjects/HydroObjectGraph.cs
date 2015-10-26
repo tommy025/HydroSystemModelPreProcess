@@ -165,10 +165,18 @@ namespace HydroSystemModelPreProcess.HydroObjects
             if (item is HydroEdge)
             {
                 var edgeInfo = hydroEdges[(HydroEdge)item];
-                var vertexInfo = hydroVertexs[edgeInfo.Vertex1];
-                vertexInfo.Remove((HydroEdge)item);
-                vertexInfo = hydroVertexs[edgeInfo.Vertex2];
-                vertexInfo.Remove((HydroEdge)item);
+                if (edgeInfo.Vertex1 != null)
+                {
+                    var vertexInfo = hydroVertexs[edgeInfo.Vertex1];
+                    vertexInfo.Remove((HydroEdge)item);
+                }
+
+                if (edgeInfo.Vertex2 != null)
+                {
+                    var vertexInfo = hydroVertexs[edgeInfo.Vertex2];
+                    vertexInfo.Remove((HydroEdge)item);
+                }
+
                 hydroEdges.Remove((HydroEdge)item);
             }
             else if (item is HydroVertex)
