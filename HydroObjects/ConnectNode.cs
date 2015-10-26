@@ -9,12 +9,9 @@ namespace HydroSystemModelPreProcess.HydroObjects
 {
     public class ConnectNode : HydroVertex
     {
-        public override Rectangle VertexVisualElement
+        public static Rectangle GetVisualElement()
         {
-            get
-            {
-                return (Rectangle)rdict["ConnectNodeIcon"];
-            }
+            return (Rectangle)rdict["ConnectNodeIcon"];
         }
     }
 }

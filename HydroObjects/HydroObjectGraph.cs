@@ -222,13 +222,10 @@ namespace HydroSystemModelPreProcess.HydroObjects
                 throw new ArgumentNullException("HydroEdge reference should not be null!");
 
             if (!hydroObjects.Contains(edge))
-                hydroObjects.Add(edge);
-
-            
+                hydroObjects.Add(edge);  
 
             var hydroEdgeInfo = hydroEdges[edge];
             hydroEdgeInfo.Vertex2 = vertex;
-
 
             if (vertex != null)
             {
@@ -268,6 +265,26 @@ namespace HydroSystemModelPreProcess.HydroObjects
             SetVertex2(edge, vertex2);
         }
 
+        public bool IsConnected(HydroVertex vertex1, HydroVertex vertex2)
+        {
+            var result = (from e1 in hydroVertexs[vertex1]
+                          join e2 in hydroVertexs[vertex2]
+                          on e1 equals e2
+                          select e1).ToArray();
+
+            return result.Length != 0;
+        }
+
+        public bool IsConnectedTo(HydroEdge edge, HydroVertex vertex)
+        {
+            return hydroEdges[edge].IsConnectedTo(vertex);
+        }
+
+        public bool IsBetween(HydroEdge edge, HydroVertex vertex1, HydroVertex vertex2)
+        {
+            return hydroEdges[edge].IsBetween(vertex1, vertex2);
+        }
+
         public void DisConnectVertexs(HydroEdge edge)
         {
             SetVertex1(edge, null);
@@ -281,21 +298,6 @@ namespace HydroSystemModelPreProcess.HydroObjects
                         select e).First().Key;
 
             DisConnectVertexs(edge);
-        }
-
-        public PressurePipe AddPressurePipe(HydroVertex vertex1, HydroVertex vertex2)
-        {
-            var pPipe = new PressurePipe();
-            Add(pPipe);
-            ConnectVertexs(pPipe, vertex1, vertex2);
-            return pPipe;
-        }
-
-        public ConnectNode AddConnectNode()
-        {
-            var cNode = new ConnectNode();
-            Add(cNode);
-            return cNode;
         }
     }
 }

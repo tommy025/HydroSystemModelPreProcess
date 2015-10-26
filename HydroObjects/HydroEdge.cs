@@ -9,16 +9,5 @@ using System.Windows;
 namespace HydroSystemModelPreProcess.HydroObjects
 {
     public abstract class HydroEdge : HydroObject
-    {
-        public abstract FrameworkElement EdgeVisualElement
-        { get; }
-
-        public sealed override FrameworkElement VisualElement
-        {
-            get
-            {
-                return EdgeVisualElement;
-            }
-        }
-    }
+    { }
 }

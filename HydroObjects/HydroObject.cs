@@ -27,8 +27,5 @@ namespace HydroSystemModelPreProcess.HydroObjects
             rdict = new ResourceDictionary();
             rdict.Source = new Uri(rdictSource, UriKind.RelativeOrAbsolute);
         }
-
-        public abstract FrameworkElement VisualElement
-        { get; }
     }
 }

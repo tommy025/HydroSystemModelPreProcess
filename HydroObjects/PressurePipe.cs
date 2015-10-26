@@ -11,12 +11,9 @@ namespace HydroSystemModelPreProcess.HydroObjects
 {
     public class PressurePipe : HydroEdge
     {
-        public override FrameworkElement EdgeVisualElement
+        public static Line GetVisualElement()
         {
-            get
-            {   
-                return (Line)rdict["PressurePipe"];  
-            }
+            return (Line)rdict["PressurePipe"];  
         }
     }
 }

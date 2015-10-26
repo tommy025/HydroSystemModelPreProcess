@@ -11,15 +11,5 @@ namespace HydroSystemModelPreProcess.HydroObjects
 {
     public abstract class HydroVertex : HydroObject
     {
-        public abstract Rectangle VertexVisualElement
-        { get; }
-
-        public sealed override FrameworkElement VisualElement
-        {
-            get
-            {
-                return VertexVisualElement;
-            }
-        }
     }
 }
