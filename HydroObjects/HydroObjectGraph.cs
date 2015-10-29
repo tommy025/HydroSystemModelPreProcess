@@ -58,77 +58,52 @@ namespace HydroSystemModelPreProcess.HydroObjects
             }
         }
 
-        public HydroVertex[] GetVertexs()
-        {
-            return (from o in hydroObjects
-                    where o is HydroVertex
-                    select (HydroVertex)o).ToArray();
-        }
-
-        public HydroVertex[] GetVertexs(HydroEdge edge)
-        {
-            return hydroEdges[edge].GetVertexs();
-        }
-
-        public HydroEdge[] GetEdges()
-        {
-            return (from o in hydroObjects
-                    where o is HydroEdge
-                    select (HydroEdge)o).ToArray();
-        }
-
-        public HydroEdge[] GetEdges(HydroVertex vertex)
-        {
-            return hydroVertexs[vertex].ToArray();
-        }
-
         public void Add(HydroObject item)
         {
-            if (item != null && !hydroObjects.Contains(item))
-            { 
-                ((ICollection<HydroObject>)hydroObjects).Add(item);
-                //RegisterHydroObjectToDictionary(item);
-            }
-        }
+            if (item == null)
+                throw new ArgumentNullException("Cannot add null object to HydroObjectGraph!");
+
+            if (hydroObjects.Contains(item))
+                throw new ArgumentException("Given HydroObject already in HydroObjectGraph!");
+
+            hydroObjects.Add(item);
+        }     
 
         public void Clear()
         {
-            //hydroVertexs.Clear();
-            //hydroEdges.Clear();
-            ((ICollection<HydroObject>)hydroObjects).Clear();
+            hydroObjects.Clear();
         }
 
         public bool Contains(HydroObject item)
         {
-            return ((ICollection<HydroObject>)hydroObjects).Contains(item);
+            return hydroObjects.Contains(item);
         }
 
         public void CopyTo(HydroObject[] array, int arrayIndex)
         {
-            ((ICollection<HydroObject>)hydroObjects).CopyTo(array, arrayIndex);
+            hydroObjects.CopyTo(array, arrayIndex);
         }
 
         public bool Remove(HydroObject item)
         {
-            //RemoveHydroObjectFromDictionary(item);
-            return ((ICollection<HydroObject>)hydroObjects).Remove(item);
+            return hydroObjects.Remove(item);
         }
 
         public IEnumerator<HydroObject> GetEnumerator()
         {
-            return ((ICollection<HydroObject>)hydroObjects).GetEnumerator();
+            return hydroObjects.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return ((ICollection<HydroObject>)hydroObjects).GetEnumerator();
+            return hydroObjects.GetEnumerator();
         }
 
         public int Count
         {
             get
             {
-                return ((ICollection<HydroObject>)hydroObjects).Count;
+                return hydroObjects.Count;
             }
         }
 
@@ -136,7 +111,7 @@ namespace HydroSystemModelPreProcess.HydroObjects
         {
             get
             {
-                return ((ICollection<HydroObject>)hydroObjects).IsReadOnly;
+                return (hydroObjects as ICollection<HydroObject>).IsReadOnly;
             }
         }
 
@@ -204,7 +179,10 @@ namespace HydroSystemModelPreProcess.HydroObjects
                 throw new ArgumentNullException("HydroEdge reference should not be null!");
 
             if (!hydroObjects.Contains(edge))
-                hydroObjects.Add(edge);
+                throw new ArgumentException("Given HydroEdge not contained in HydroObjectGraph!");
+
+            if (vertex != null && !hydroObjects.Contains(vertex))
+                throw new ArgumentException("Given HydroVertex not contained in HydroObjectGraph!");
 
             var hydroEdgeInfo = hydroEdges[edge];
             if (hydroEdgeInfo.Vertex1 != null)
@@ -212,12 +190,7 @@ namespace HydroSystemModelPreProcess.HydroObjects
             
             hydroEdgeInfo.Vertex1 = vertex;
             if (vertex != null)
-            {
-                if (!hydroObjects.Contains(vertex))
-                    hydroObjects.Add(vertex);
-
                 hydroVertexs[vertex].Add(edge);
-            }
         }
 
         public void SetVertex2(HydroEdge edge, HydroVertex vertex)
@@ -226,7 +199,10 @@ namespace HydroSystemModelPreProcess.HydroObjects
                 throw new ArgumentNullException("HydroEdge reference should not be null!");
 
             if (!hydroObjects.Contains(edge))
-                hydroObjects.Add(edge);
+                throw new ArgumentException("Given HydroEdge not contained in HydroObjectGraph!");
+
+            if (vertex != null && !hydroObjects.Contains(vertex))
+                throw new ArgumentException("Given HydroVertex not contained in HydroObjectGraph!");
 
             var hydroEdgeInfo = hydroEdges[edge];
             if (hydroEdgeInfo.Vertex2 != null)
@@ -234,17 +210,7 @@ namespace HydroSystemModelPreProcess.HydroObjects
 
             hydroEdgeInfo.Vertex2 = vertex;
             if (vertex != null)
-            {
-                if (!hydroObjects.Contains(vertex))
-                    hydroObjects.Add(vertex);
-
-                hydroVertexs[vertex].Add(edge);
-            }
-        }
-
-        public int TrySetVertex(HydroEdge edge, HydroVertex vertex)
-        {
-            return hydroEdges[edge].TryAddVertex(vertex);
+                hydroVertexs[vertex].Add(edge);  
         }
 
         public HydroVertex GetVertex1(HydroEdge edge)
@@ -255,14 +221,6 @@ namespace HydroSystemModelPreProcess.HydroObjects
         public HydroVertex GetVertex2(HydroEdge edge)
         {
             return hydroEdges[edge].Vertex2;
-        }
-
-        public HydroVertex GetTheOtherVertex(HydroEdge edge, HydroVertex vertex)
-        {
-            if (!hydroObjects.Contains(edge) || !hydroObjects.Contains(vertex))
-                throw new ArgumentException("Given HydroEdge or HydroVertex is not included in HydroObjectGraph!");
-
-            return hydroEdges[edge].GetTheOtherVertex(vertex);
         }
 
         public void ConnectVertexs(HydroEdge edge, HydroVertex vertex1, HydroVertex vertex2)
@@ -307,51 +265,154 @@ namespace HydroSystemModelPreProcess.HydroObjects
                 DisConnectVertexs(e);
         }
 
-        #region XmlSerialization-Related
-        //Methods and properties in this region should only be used for xml serialization
-        //and may cause unexpected errors and bugs especially in multi-threads.
-
-        public XmlSchema GetSchema()
+        public HydroVertex[] GetAllVertexs()
         {
-            return null;
-        }     
-
-        public void ReadXml(XmlReader reader)
-        {
-            
+            return hydroVertexs.Keys.ToArray();
         }
 
-        public void WriteXml(XmlWriter writer)
+        public HydroVertex[] GetVertexs(HydroEdge edge)
         {
-            throw new NotImplementedException();
+            return hydroEdges[edge].GetVertexs();
         }
 
-        public string GetHydroObjectName(HydroObject hObject)
+        public HydroEdge[] GetAllEdges()
         {
-            if (hObject is HydroEdge)
-                return GetHydroEdgeName(hObject as HydroEdge);
-            else if (hObject is HydroVertex)
-                return GetHydroVertexName(hObject as HydroVertex);
-            else
-                throw new ArgumentException("Unsupported type '" + hObject.GetType().ToString() +
-                    "' when getting name!");
+            return hydroEdges.Keys.ToArray();
         }
 
-        public HydroObject GetHydroObjectByName(string name)
+        public HydroEdge[] GetEdges(HydroVertex vertex)
         {
-            return hydroObjects[int.Parse(name.Substring(1))];
+            return hydroVertexs[vertex].ToArray();
         }
 
-        private string GetHydroVertexName(HydroVertex hVertex)
+        private class HydroEdgeInfo : HydroObjectInfo
         {
-            return "V" + hydroObjects.IndexOf(hVertex);
+            private HydroVertex vertex1;
+
+            public HydroVertex Vertex1
+            {
+                get { return vertex1; }
+                set
+                {
+                    if (vertex2 == value && value != null)
+                        throw new ArgumentException("Vertexs of HydroEdgeInfo must be different!");
+
+                    vertex1 = value;
+                }
+            }
+
+            private HydroVertex vertex2;
+
+            public HydroVertex Vertex2
+            {
+                get { return vertex2; }
+                set
+                {
+                    if (vertex1 == value && value != null)
+                        throw new ArgumentException("Vertexs of HydroEdgeInfo must be different!");
+
+                    vertex2 = value;
+                }
+            }
+
+            public HydroVertex[] GetVertexs()
+            {
+                return new HydroVertex[] { Vertex1, Vertex2 };
+            }
+
+            public bool RemoveVertex(HydroVertex vertex)
+            {
+                if (vertex == Vertex1)
+                {
+                    Vertex1 = null;
+                    return true;
+                }
+                else if (vertex == Vertex2)
+                {
+                    Vertex2 = null;
+                    return true;
+                }
+                else
+                    return false;
+            }
+
+            public bool IsBetween(HydroVertex v1, HydroVertex v2)
+            {
+                if (Vertex1 == v1 && Vertex2 == v2 || Vertex2 == v1 && Vertex1 == v2)
+                    return true;
+                else
+                    return false;
+            }
+
+            public bool IsConnectedTo(HydroVertex vertex)
+            {
+                if (vertex == Vertex1 || vertex == Vertex2)
+                    return true;
+                else
+                    return false;
+            }
         }
 
-        private string GetHydroEdgeName(HydroEdge hEdge)
+        private class HydroVertexInfo : HydroObjectInfo, ICollection<HydroEdge>
         {
-            return "E" + hydroObjects.IndexOf(hEdge);
-        }
+            public HydroVertexInfo()
+            {
+                edges = new List<HydroEdge>();
+            }
 
-        #endregion
+            private readonly List<HydroEdge> edges;
+
+            public void Add(HydroEdge item)
+            {
+                if (item != null && !edges.Contains(item))
+                    edges.Add(item);
+            }
+
+            public void Clear()
+            {
+                edges.Clear();
+            }
+
+            public bool Contains(HydroEdge item)
+            {
+                return edges.Contains(item);
+            }
+
+            public void CopyTo(HydroEdge[] array, int arrayIndex)
+            {
+                edges.CopyTo(array, arrayIndex);
+            }
+
+            public bool Remove(HydroEdge item)
+            {
+                return edges.Remove(item);
+            }
+
+            public IEnumerator<HydroEdge> GetEnumerator()
+            {
+                return ((ICollection<HydroEdge>)edges).GetEnumerator();
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return ((ICollection<HydroEdge>)edges).GetEnumerator();
+            }
+
+            public int Count
+            {
+                get
+                {
+                    return edges.Count;
+                }
+            }
+
+            public bool IsReadOnly
+            {
+                get
+                {
+                    return ((ICollection<HydroEdge>)edges).IsReadOnly;
+                }
+            }
+        }
     }
 }

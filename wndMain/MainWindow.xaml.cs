@@ -134,9 +134,6 @@ namespace HydroSystemModelPreProcess
 
         private void SetPipeFirstPoint(FrameworkElement element, Point position, bool shouldTransform)
         {
-            if (element == null)
-                throw new ArgumentNullException("Input pipe should not be null!");
-
             if (element is Line)
             {
                 var pPipe = element as Line;
@@ -150,9 +147,6 @@ namespace HydroSystemModelPreProcess
 
         private void SetPipeSecondPoint(FrameworkElement element, Point position, bool shouldTransform)
         {
-            if (element == null)
-                throw new ArgumentNullException("Input pipe should not be null!");
-
             if (element is Line)
             {
                 var pPipe = element as Line;
@@ -166,15 +160,18 @@ namespace HydroSystemModelPreProcess
 
         private bool SetPipeFirstNode(FrameworkElement element, Rectangle node)
         {
-            if (element == null)
-                throw new ArgumentNullException("Input pipe should not be null!");
-
             if (element is Line)
             {
                 var pPipe = element as Line;
                 var hEdge = elementDictionary[element] as HydroEdge;
-                var hVertex = elementDictionary[node] as HydroVertex;
 
+                if (node == null)
+                {
+                    hydroObjectGraph.SetVertex1(hEdge, null);
+                    return true;
+                }
+
+                var hVertex = elementDictionary[node] as HydroVertex;
                 if (hydroObjectGraph.GetVertex2(hEdge) == hVertex)
                     return false;
 
@@ -194,15 +191,18 @@ namespace HydroSystemModelPreProcess
 
         private bool SetPipeSecondNode(FrameworkElement element, Rectangle node)
         {
-            if (element == null)
-                throw new ArgumentNullException("Input pipe should not be null!");
-
             if (element is Line)
             {
                 var pPipe = element as Line;
                 var hEdge = elementDictionary[element] as HydroEdge;
-                var hVertex = elementDictionary[node] as HydroVertex; 
 
+                if (node == null)
+                {
+                    hydroObjectGraph.SetVertex1(hEdge, null);
+                    return true;
+                }
+
+                var hVertex = elementDictionary[node] as HydroVertex; 
                 if (hydroObjectGraph.GetVertex1(hEdge) == hVertex)
                     return false;
 
@@ -225,32 +225,6 @@ namespace HydroSystemModelPreProcess
                 return false;
         }
 
-        private void ClearPipeFirstNode(FrameworkElement element)
-        {
-            if (element == null)
-                throw new ArgumentNullException("Input pipe should not be null!");
-
-            if (element is Line)
-            {
-                var pPipe = element as Line;
-                var hEdge = elementDictionary[element] as HydroEdge;
-                hydroObjectGraph.SetVertex1(hEdge, null);
-            }
-        }
-
-        private void ClearPipeSecondNode(FrameworkElement element)
-        {
-            if (element == null)
-                throw new ArgumentNullException("Input pipe should not be null!");
-
-            if (element is Line)
-            {
-                var pPipe = element as Line;
-                var hEdge = elementDictionary[element] as HydroEdge;
-                hydroObjectGraph.SetVertex2(hEdge, null);
-            }
-        }
-
         private void RemoveObjectAndElementData(FrameworkElement element)
         {
             var hydroObject = elementDictionary[element];
@@ -259,7 +233,7 @@ namespace HydroSystemModelPreProcess
             drawingCanvas.Children.Remove(element);
         }
 
-        abstract class MainWindowState
+        private abstract class MainWindowState
         {
             protected MainWindow container;
 
@@ -353,7 +327,7 @@ namespace HydroSystemModelPreProcess
             }
         }
 
-        class MainWindowSelecting : MainWindowState
+        private class MainWindowSelecting : MainWindowState
         {
             public MainWindowSelecting(MainWindow _container) : base(_container)
             { }
@@ -398,7 +372,7 @@ namespace HydroSystemModelPreProcess
             }
         }
 
-        class MainWindowDeleting : MainWindowState
+        private class MainWindowDeleting : MainWindowState
         {
             public MainWindowDeleting(MainWindow _container) : base(_container)
             { }
@@ -416,7 +390,7 @@ namespace HydroSystemModelPreProcess
             }
         }
 
-        class MainWindowReconnecting : MainWindowState
+        private class MainWindowReconnecting : MainWindowState
         {
             public MainWindowReconnecting(MainWindow _container) : base(_container)
             {
@@ -438,7 +412,7 @@ namespace HydroSystemModelPreProcess
             }
         }
 
-        class MainWindowShiftingScreen : MainWindowState
+        private class MainWindowShiftingScreen : MainWindowState
         {
             public MainWindowShiftingScreen(MainWindow _container) : base(_container)
             {
@@ -472,7 +446,7 @@ namespace HydroSystemModelPreProcess
             }
         }
 
-        class MainWindowAddingCNode : MainWindowState
+        private class MainWindowAddingCNode : MainWindowState
         {
             public MainWindowAddingCNode(MainWindow _container) : base(_container)
             { }
@@ -484,7 +458,7 @@ namespace HydroSystemModelPreProcess
             }
         }
 
-        class MainWindowSettingFirstPPipeNode : MainWindowState
+        private class MainWindowSettingFirstPPipeNode : MainWindowState
         {
             public MainWindowSettingFirstPPipeNode(MainWindow _container, Line line) : base(_container)
             {
@@ -496,13 +470,14 @@ namespace HydroSystemModelPreProcess
                 else
                 {
                     element = line;
-                    originalPos = new Point(line.X1, line.Y1);
+                    originalElement = VisualTreeHelper.HitTest(drawingCanvas, new Point(line.X1, line.Y1)).VisualHit as Rectangle;
+                    container.SetPipeFirstNode(element, null);
                 }
             }
 
             private bool isCreating;
 
-            private Point originalPos;
+            private Rectangle originalElement;
 
             private Line element
             { get; set; }
@@ -547,7 +522,7 @@ namespace HydroSystemModelPreProcess
                 {
                     if(!(newState is MainWindowSettingSecondPPipeNode))
                     {
-                        container.SetPipeFirstPoint(element, originalPos, false);
+                        container.SetPipeFirstNode(element, originalElement);
                     }
                 }    
                 else
@@ -560,7 +535,7 @@ namespace HydroSystemModelPreProcess
             }
         }
 
-        class MainWindowSettingSecondPPipeNode : MainWindowState
+        private class MainWindowSettingSecondPPipeNode : MainWindowState
         {
             public MainWindowSettingSecondPPipeNode(MainWindow _container, Line line, bool _isCreating) : base(_container)
             {
@@ -568,13 +543,14 @@ namespace HydroSystemModelPreProcess
                     throw new ArgumentNullException("Input line element must not be null!");
 
                 element = line;
-                originalPos = new Point(line.X2, line.Y2);
+                originalElement = VisualTreeHelper.HitTest(drawingCanvas, new Point(line.X2, line.Y2)).VisualHit as Rectangle;
+                container.SetPipeSecondNode(element, null);
                 isCreating = _isCreating;
             }
 
             private bool isCreating;
 
-            private Point originalPos;
+            private Rectangle originalElement;
 
             private Line element
             { get; set; }
@@ -613,7 +589,7 @@ namespace HydroSystemModelPreProcess
                 if (!isCreating)
                 {
                     if (!(newState is MainWindowReconnecting))
-                        container.SetPipeSecondPoint(element, originalPos, false);
+                        container.SetPipeSecondNode(element, originalElement);
                 }
                 else
                 {

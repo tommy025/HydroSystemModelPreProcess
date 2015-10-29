@@ -27,5 +27,30 @@ namespace HydroSystemModelPreProcess.HydroObjects
             rdict = new ResourceDictionary();
             rdict.Source = new Uri(rdictSource, UriKind.RelativeOrAbsolute);
         }
+
+        public HydroObject() : this("", DateTime.Now)
+        { }
+
+        public HydroObject(string _name) : this(_name, DateTime.Now)
+        { }
+
+        public HydroObject(DateTime _creationTime) : this("", _creationTime)
+        { }
+
+        public HydroObject(string _name, DateTime _creationTime)
+        {
+            Name = _name;
+            creationTime = _creationTime;
+        }
+
+        public string Name
+        { get; set; }
+
+        private readonly DateTime creationTime;
+
+        public DateTime CreationTime
+        {
+            get { return creationTime; }
+        }
     }
 }
