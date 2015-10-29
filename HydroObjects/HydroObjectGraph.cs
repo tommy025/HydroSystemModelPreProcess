@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Xml;
+using System.Xml.Schema;
+using System.Xml.Serialization;
 
 namespace HydroSystemModelPreProcess.HydroObjects
 {
@@ -204,15 +207,16 @@ namespace HydroSystemModelPreProcess.HydroObjects
                 hydroObjects.Add(edge);
 
             var hydroEdgeInfo = hydroEdges[edge];
+            if (hydroEdgeInfo.Vertex1 != null)
+                hydroVertexs[hydroEdgeInfo.Vertex1].Remove(edge);
+            
             hydroEdgeInfo.Vertex1 = vertex;
-
             if (vertex != null)
             {
                 if (!hydroObjects.Contains(vertex))
                     hydroObjects.Add(vertex);
 
-                var hydroVertexInfo = hydroVertexs[vertex];
-                hydroVertexInfo.Add(edge);
+                hydroVertexs[vertex].Add(edge);
             }
         }
 
@@ -222,17 +226,19 @@ namespace HydroSystemModelPreProcess.HydroObjects
                 throw new ArgumentNullException("HydroEdge reference should not be null!");
 
             if (!hydroObjects.Contains(edge))
-                hydroObjects.Add(edge);  
+                hydroObjects.Add(edge);
 
             var hydroEdgeInfo = hydroEdges[edge];
-            hydroEdgeInfo.Vertex2 = vertex;
+            if (hydroEdgeInfo.Vertex2 != null)
+                hydroVertexs[hydroEdgeInfo.Vertex1].Remove(edge);
 
+            hydroEdgeInfo.Vertex2 = vertex;
             if (vertex != null)
             {
                 if (!hydroObjects.Contains(vertex))
                     hydroObjects.Add(vertex);
-                var hydroVertexInfo = hydroVertexs[vertex];
-                hydroVertexInfo.Add(edge);
+
+                hydroVertexs[vertex].Add(edge);
             }
         }
 
@@ -293,11 +299,59 @@ namespace HydroSystemModelPreProcess.HydroObjects
 
         public void DisConnectVertexs(HydroVertex vertex1, HydroVertex vertex2)
         {
-            var edge = (from e in hydroEdges
+            var edges = from e in hydroEdges
                         where e.Value.IsBetween(vertex1, vertex2)
-                        select e).First().Key;
+                        select e.Key;
 
-            DisConnectVertexs(edge);
+            foreach (var e in edges)
+                DisConnectVertexs(e);
         }
+
+        #region XmlSerialization-Related
+        //Methods and properties in this region should only be used for xml serialization
+        //and may cause unexpected errors and bugs especially in multi-threads.
+
+        public XmlSchema GetSchema()
+        {
+            return null;
+        }     
+
+        public void ReadXml(XmlReader reader)
+        {
+            
+        }
+
+        public void WriteXml(XmlWriter writer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string GetHydroObjectName(HydroObject hObject)
+        {
+            if (hObject is HydroEdge)
+                return GetHydroEdgeName(hObject as HydroEdge);
+            else if (hObject is HydroVertex)
+                return GetHydroVertexName(hObject as HydroVertex);
+            else
+                throw new ArgumentException("Unsupported type '" + hObject.GetType().ToString() +
+                    "' when getting name!");
+        }
+
+        public HydroObject GetHydroObjectByName(string name)
+        {
+            return hydroObjects[int.Parse(name.Substring(1))];
+        }
+
+        private string GetHydroVertexName(HydroVertex hVertex)
+        {
+            return "V" + hydroObjects.IndexOf(hVertex);
+        }
+
+        private string GetHydroEdgeName(HydroEdge hEdge)
+        {
+            return "E" + hydroObjects.IndexOf(hEdge);
+        }
+
+        #endregion
     }
 }

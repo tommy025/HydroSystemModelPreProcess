@@ -225,6 +225,32 @@ namespace HydroSystemModelPreProcess
                 return false;
         }
 
+        private void ClearPipeFirstNode(FrameworkElement element)
+        {
+            if (element == null)
+                throw new ArgumentNullException("Input pipe should not be null!");
+
+            if (element is Line)
+            {
+                var pPipe = element as Line;
+                var hEdge = elementDictionary[element] as HydroEdge;
+                hydroObjectGraph.SetVertex1(hEdge, null);
+            }
+        }
+
+        private void ClearPipeSecondNode(FrameworkElement element)
+        {
+            if (element == null)
+                throw new ArgumentNullException("Input pipe should not be null!");
+
+            if (element is Line)
+            {
+                var pPipe = element as Line;
+                var hEdge = elementDictionary[element] as HydroEdge;
+                hydroObjectGraph.SetVertex2(hEdge, null);
+            }
+        }
+
         private void RemoveObjectAndElementData(FrameworkElement element)
         {
             var hydroObject = elementDictionary[element];
@@ -523,7 +549,14 @@ namespace HydroSystemModelPreProcess
                     {
                         container.SetPipeFirstPoint(element, originalPos, false);
                     }
-                }             
+                }    
+                else
+                {
+                    if (!(newState is MainWindowSettingSecondPPipeNode))
+                    {
+                        container.RemoveObjectAndElementData(element);
+                    }
+                }         
             }
         }
 
