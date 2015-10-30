@@ -15,7 +15,6 @@ namespace HydroSystemModelPreProcess.HydroObjects
         public HydroObjectGraph()
         {
             hydroObjects = new ObservableCollection<HydroObject>();
-            hydroVertexs = new Dictionary<HydroVertex, HydroVertexInfo>();
             hydroEdges = new Dictionary<HydroEdge, HydroEdgeInfo>();
             CollectionChanged += OnHydroObjectGraphModified;
         }
@@ -48,7 +47,6 @@ namespace HydroSystemModelPreProcess.HydroObjects
                 case NotifyCollectionChangedAction.Reset:
                     {
                         hydroEdges.Clear();
-                        hydroVertexs.Clear();
                         break;
                     }
                 default:
@@ -123,17 +121,13 @@ namespace HydroSystemModelPreProcess.HydroObjects
 
         private ObservableCollection<HydroObject> hydroObjects;
 
-        private Dictionary<HydroVertex, HydroVertexInfo> hydroVertexs;
-
         private Dictionary<HydroEdge, HydroEdgeInfo> hydroEdges;
 
         private void RegisterHydroObjectToDictionary(HydroObject item)
         {
             if (item is HydroEdge)
                 hydroEdges.Add((HydroEdge)item, new HydroEdgeInfo());
-            else if (item is HydroVertex)
-                hydroVertexs.Add((HydroVertex)item, new HydroVertexInfo());
-            else
+            else if (!(item is HydroVertex))
                 throw new ArgumentException("Unsupported type '" + item.GetType().ToString() +
                     "' when adding to HydroObjectGraph!");
         }
@@ -142,33 +136,9 @@ namespace HydroSystemModelPreProcess.HydroObjects
         {
             if (item is HydroEdge)
             {
-                var edgeInfo = hydroEdges[(HydroEdge)item];
-                if (edgeInfo.Vertex1 != null)
-                {
-                    var vertexInfo = hydroVertexs[edgeInfo.Vertex1];
-                    vertexInfo.Remove((HydroEdge)item);
-                }
-
-                if (edgeInfo.Vertex2 != null)
-                {
-                    var vertexInfo = hydroVertexs[edgeInfo.Vertex2];
-                    vertexInfo.Remove((HydroEdge)item);
-                }
-
                 hydroEdges.Remove((HydroEdge)item);
             }
-            else if (item is HydroVertex)
-            {
-                var vertexInfo = hydroVertexs[(HydroVertex)item];
-                foreach(var edge in vertexInfo)
-                {
-                    var edgeInfo = hydroEdges[edge];
-                    edgeInfo.RemoveVertex((HydroVertex)item);
-                }
-
-                hydroVertexs.Remove((HydroVertex)item);
-            }
-            else
+            else if (!(item is HydroVertex))
                 throw new ArgumentException("Unsupported type '" + item.GetType().ToString() +
                     "' when removing from HydroObjectGraph!");
         }
@@ -184,13 +154,7 @@ namespace HydroSystemModelPreProcess.HydroObjects
             if (vertex != null && !hydroObjects.Contains(vertex))
                 throw new ArgumentException("Given HydroVertex not contained in HydroObjectGraph!");
 
-            var hydroEdgeInfo = hydroEdges[edge];
-            if (hydroEdgeInfo.Vertex1 != null)
-                hydroVertexs[hydroEdgeInfo.Vertex1].Remove(edge);
-            
-            hydroEdgeInfo.Vertex1 = vertex;
-            if (vertex != null)
-                hydroVertexs[vertex].Add(edge);
+            hydroEdges[edge].Vertex1 = vertex;
         }
 
         public void SetVertex2(HydroEdge edge, HydroVertex vertex)
@@ -204,13 +168,7 @@ namespace HydroSystemModelPreProcess.HydroObjects
             if (vertex != null && !hydroObjects.Contains(vertex))
                 throw new ArgumentException("Given HydroVertex not contained in HydroObjectGraph!");
 
-            var hydroEdgeInfo = hydroEdges[edge];
-            if (hydroEdgeInfo.Vertex2 != null)
-                hydroVertexs[hydroEdgeInfo.Vertex1].Remove(edge);
-
-            hydroEdgeInfo.Vertex2 = vertex;
-            if (vertex != null)
-                hydroVertexs[vertex].Add(edge);  
+            hydroEdges[edge].Vertex2 = vertex;
         }
 
         public HydroVertex GetVertex1(HydroEdge edge)
@@ -231,10 +189,9 @@ namespace HydroSystemModelPreProcess.HydroObjects
 
         public bool IsConnected(HydroVertex vertex1, HydroVertex vertex2)
         {
-            var result = (from e1 in hydroVertexs[vertex1]
-                          join e2 in hydroVertexs[vertex2]
-                          on e1 equals e2
-                          select e1).ToArray();
+            var result = (from e in hydroEdges.Values
+                          where e.IsBetween(vertex1, vertex2)
+                          select e).ToArray();
 
             return result.Length != 0;
         }
@@ -267,7 +224,9 @@ namespace HydroSystemModelPreProcess.HydroObjects
 
         public HydroVertex[] GetAllVertexs()
         {
-            return hydroVertexs.Keys.ToArray();
+            return (from v in hydroObjects
+                    where v is HydroVertex
+                    select v as HydroVertex).ToArray();
         }
 
         public HydroVertex[] GetVertexs(HydroEdge edge)
@@ -282,10 +241,19 @@ namespace HydroSystemModelPreProcess.HydroObjects
 
         public HydroEdge[] GetEdges(HydroVertex vertex)
         {
-            return hydroVertexs[vertex].ToArray();
+            return (from kvp in hydroEdges
+                    where kvp.Value.IsConnectedTo(vertex)
+                    select kvp.Key).ToArray();
         }
 
-        private class HydroEdgeInfo : HydroObjectInfo
+        public HydroEdge[] GetEdges(HydroVertex vertex1, HydroVertex vertex2)
+        {
+            return (from kvp in hydroEdges
+                    where kvp.Value.IsBetween(vertex1, vertex2)
+                    select kvp.Key).ToArray();
+        }
+
+        private class HydroEdgeInfo
         {
             private HydroVertex vertex1;
 
@@ -338,6 +306,9 @@ namespace HydroSystemModelPreProcess.HydroObjects
 
             public bool IsBetween(HydroVertex v1, HydroVertex v2)
             {
+                if (v1 == null || v2 == null)
+                    return false;
+
                 if (Vertex1 == v1 && Vertex2 == v2 || Vertex2 == v1 && Vertex1 == v2)
                     return true;
                 else
@@ -350,68 +321,6 @@ namespace HydroSystemModelPreProcess.HydroObjects
                     return true;
                 else
                     return false;
-            }
-        }
-
-        private class HydroVertexInfo : HydroObjectInfo, ICollection<HydroEdge>
-        {
-            public HydroVertexInfo()
-            {
-                edges = new List<HydroEdge>();
-            }
-
-            private readonly List<HydroEdge> edges;
-
-            public void Add(HydroEdge item)
-            {
-                if (item != null && !edges.Contains(item))
-                    edges.Add(item);
-            }
-
-            public void Clear()
-            {
-                edges.Clear();
-            }
-
-            public bool Contains(HydroEdge item)
-            {
-                return edges.Contains(item);
-            }
-
-            public void CopyTo(HydroEdge[] array, int arrayIndex)
-            {
-                edges.CopyTo(array, arrayIndex);
-            }
-
-            public bool Remove(HydroEdge item)
-            {
-                return edges.Remove(item);
-            }
-
-            public IEnumerator<HydroEdge> GetEnumerator()
-            {
-                return ((ICollection<HydroEdge>)edges).GetEnumerator();
-            }
-
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return ((ICollection<HydroEdge>)edges).GetEnumerator();
-            }
-
-            public int Count
-            {
-                get
-                {
-                    return edges.Count;
-                }
-            }
-
-            public bool IsReadOnly
-            {
-                get
-                {
-                    return ((ICollection<HydroEdge>)edges).IsReadOnly;
-                }
             }
         }
     }

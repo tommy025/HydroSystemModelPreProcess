@@ -198,7 +198,7 @@ namespace HydroSystemModelPreProcess
 
                 if (node == null)
                 {
-                    hydroObjectGraph.SetVertex1(hEdge, null);
+                    hydroObjectGraph.SetVertex2(hEdge, null);
                     return true;
                 }
 
@@ -470,17 +470,16 @@ namespace HydroSystemModelPreProcess
                 else
                 {
                     element = line;
-                    originalElement = VisualTreeHelper.HitTest(drawingCanvas, new Point(line.X1, line.Y1)).VisualHit as Rectangle;
-                    container.SetPipeFirstNode(element, null);
+                    originalFirstElementPos = new Point(line.X1, line.Y1);
                 }
             }
 
             private bool isCreating;
 
-            private Rectangle originalElement;
-
             private Line element
             { get; set; }
+
+            private Point originalFirstElementPos;
 
             protected override void OnDrawingCanvasMouseMove(object sender, MouseEventArgs e)
             {
@@ -494,24 +493,9 @@ namespace HydroSystemModelPreProcess
             protected override void OnDrawingCanvasMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
             {
                 var hitPosition = e.GetPosition(drawingCanvas);
-                var hitElement = VisualTreeHelper.HitTest(drawingCanvas, hitPosition).VisualHit as FrameworkElement;
-                if (hitElement == drawingCanvas || hitElement == element)
-                {
-                    container.SetPipeFirstPoint(element, hitPosition, true);
-                }
-                else if (hitElement is Rectangle)
-                {
-                    if (container.SetPipeFirstNode(element, hitElement as Rectangle) == false)
-                        return;
-                }
-                else
-                    return;
-                
-                container.SetPipeSecondPoint(element, hitPosition, true);
-                element.Visibility = Visibility.Visible;
-
+                container.SetPipeFirstPoint(element, hitPosition, true);
                 var re = new RoutedPropertyChangedEventArgs<MainWindowState>(this, 
-                    new MainWindowSettingSecondPPipeNode(container, element, isCreating));              
+                    new MainWindowSettingSecondPPipeNode(container, element, isCreating, originalFirstElementPos));              
                 OnChangeState(this, re);
             }
 
@@ -522,7 +506,7 @@ namespace HydroSystemModelPreProcess
                 {
                     if(!(newState is MainWindowSettingSecondPPipeNode))
                     {
-                        container.SetPipeFirstNode(element, originalElement);
+                        container.SetPipeFirstPoint(element, originalFirstElementPos, false);
                     }
                 }    
                 else
@@ -537,21 +521,37 @@ namespace HydroSystemModelPreProcess
 
         private class MainWindowSettingSecondPPipeNode : MainWindowState
         {
-            public MainWindowSettingSecondPPipeNode(MainWindow _container, Line line, bool _isCreating) : base(_container)
+            public MainWindowSettingSecondPPipeNode(MainWindow _container, Line line, bool _isCreating, Point _originalFirstElementPos) : base(_container)
             {
                 if (line == null)
                     throw new ArgumentNullException("Input line element must not be null!");
 
                 element = line;
-                originalElement = VisualTreeHelper.HitTest(drawingCanvas, new Point(line.X2, line.Y2)).VisualHit as Rectangle;
+                isCreating = _isCreating;         
+                originalFirstElementPos = _originalFirstElementPos;
+                originalSecondElementPos = new Point(line.X2, line.Y2);
+                container.SetPipeFirstNode(element, VisualTreeHelper.HitTest(drawingCanvas, new Point(line.X1, line.Y1)).VisualHit as Rectangle);
+                container.SetPipeSecondPoint(element, new Point(line.X1, line.Y1), false);
                 container.SetPipeSecondNode(element, null);
-                isCreating = _isCreating;
+                element.Visibility = Visibility.Visible;
             }
 
             private bool isCreating;
 
-            private Rectangle originalElement;
+            private Point originalFirstElementPos;
 
+            private Point originalSecondElementPos;
+
+            private Rectangle originalFirstElement
+            {
+                get { return VisualTreeHelper.HitTest(drawingCanvas, originalFirstElementPos).VisualHit as Rectangle; }
+            }
+
+            private Rectangle originalSecondElement
+            {
+                get { return VisualTreeHelper.HitTest(drawingCanvas, originalSecondElementPos).VisualHit as Rectangle; }
+            }
+        
             private Line element
             { get; set; }
 
@@ -589,13 +589,22 @@ namespace HydroSystemModelPreProcess
                 if (!isCreating)
                 {
                     if (!(newState is MainWindowReconnecting))
-                        container.SetPipeSecondNode(element, originalElement);
+                    {
+                        container.SetPipeSecondNode(element, null);
+                        container.SetPipeFirstNode(element, originalFirstElement);
+                        container.SetPipeSecondNode(element, originalSecondElement);
+                    }
                 }
                 else
                 {
                     if (!(newState is MainWindowSettingFirstPPipeNode))
                         container.RemoveObjectAndElementData(element);
                 }
+            }
+
+            protected override void CanChangeState(object sender, CanExecuteRoutedEventArgs e)
+            {
+                e.CanExecute = false;
             }
         }
     }

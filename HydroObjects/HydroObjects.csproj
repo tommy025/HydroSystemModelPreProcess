@@ -47,7 +47,6 @@
     <Compile Include="HydroEdge.cs" />
     <Compile Include="HydroObject.cs" />
     <Compile Include="HydroObjectGraph.cs" />
-    <Compile Include="HydroObjectInfo.cs" />
     <Compile Include="HydroVertex.cs" />
     <Compile Include="PressurePipe.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
