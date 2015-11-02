@@ -22,13 +22,9 @@
         <Menu Grid.Row="0" Grid.ColumnSpan="2" Name="mnuMain">
             <MenuItem Header="文件(_F)">
                 <MenuItem Header="新建(_N)"/>
-                <MenuItem Header="打开(_O)..."/>
+                <MenuItem Header="打开(_O)..."  Command="ApplicationCommands.Open"/>
                 <MenuItem Header="保存(_S)"/>
-                <MenuItem Header="另存为(_A)..."/>
-                <Separator/>
-                <MenuItem Header="打印(_P)..."/>
-                <MenuItem Header="打印预览(_V)"/>
-                <MenuItem Header="打印设置(_N)..."/>
+                <MenuItem Header="另存为(_A)..." Command="ApplicationCommands.SaveAs"/>
                 <Separator/>
                 <MenuItem Header="退出(_X)"/>
             </MenuItem>

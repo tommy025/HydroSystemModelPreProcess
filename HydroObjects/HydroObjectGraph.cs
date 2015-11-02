@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Xml;
+using System.Xml.Linq;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 
@@ -253,6 +254,39 @@ namespace HydroSystemModelPreProcess.HydroObjects
                     select kvp.Key).ToArray();
         }
 
+        public void LoadFromXmlFile(XElement xroot)
+        {
+            var xHydroObjects = xroot.Element("HydroObjects");
+            var xHydroEdgeInfos = xroot.Element("HydroEdgeInfos");
+            foreach (var xHydroObject in xHydroObjects.Elements())
+            {
+                Add(HydroObject.XmlDeserialize(xHydroObject));
+            }
+
+            foreach(var xHydroEdgeInfo in xHydroEdgeInfos.Elements())
+            {
+                var associatedEdgeName = xHydroEdgeInfo.Attribute("HydroEdgeFullName").Value;
+                var hydroEdge = hydroObjects.Single(hydroObject => { return hydroObject.FullName == associatedEdgeName; }) as HydroEdge;
+                var associatedVertexName1 = xHydroEdgeInfo.Element("Vertex1").Value;
+                var hydroVertex1 = hydroObjects.SingleOrDefault(hydroObject => { return hydroObject.FullName == associatedVertexName1; }) as HydroVertex;
+                SetVertex1(hydroEdge, hydroVertex1);
+                var associatedVertexName2 = xHydroEdgeInfo.Element("Vertex2").Value;
+                var hydroVertex2 = hydroObjects.SingleOrDefault(hydroObject => { return hydroObject.FullName == associatedVertexName2; }) as HydroVertex;
+                SetVertex2(hydroEdge, hydroVertex2);
+            }
+        }
+
+        public XElement[] SaveToXmlFile()
+        {
+            return new XElement[] {
+                new XElement("HydroObjects",
+                    (from o in hydroObjects
+                     select o.XmlSerialize()).ToArray()),
+                new XElement("HydroEdgeInfos",
+                    (from kvp in hydroEdges
+                     select kvp.Value.XmlSerialize(kvp.Key.FullName)).ToArray())};
+        }
+
         private class HydroEdgeInfo
         {
             private HydroVertex vertex1;
@@ -321,6 +355,13 @@ namespace HydroSystemModelPreProcess.HydroObjects
                     return true;
                 else
                     return false;
+            }
+
+            public XElement XmlSerialize(string hObjectFullName)
+            {
+                return new XElement(GetType().Name, new XAttribute("HydroEdgeFullName", hObjectFullName),
+                    new XElement("Vertex1", Vertex1 != null ? Vertex1.FullName : "null"),
+                    new XElement("Vertex2", Vertex2 != null ? Vertex2.FullName : "null"));
             }
         }
     }

@@ -12,7 +12,11 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Xml;
+using System.Xml.Linq;
+using System.IO;
 using HydroSystemModelPreProcess.HydroObjects;
+using Microsoft.Win32;
 
 namespace HydroSystemModelPreProcess
 {
@@ -58,13 +62,53 @@ namespace HydroSystemModelPreProcess
         public TranslateTransform Transform
         { get; set; }
 
+        public CommandBinding ChangeStateCommandBinding
+        { get; private set; }
+            
+        public CommandBinding SaveAsCommandBinding
+        { get; private set; }
+
+        public CommandBinding OpenCommandBinding
+        { get; private set; }
+
         public MainWindow()
         {
             InitializeComponent();
+
+            ChangeStateCommandBinding = new CommandBinding(ChangeState);
+            SaveAsCommandBinding = new CommandBinding(ApplicationCommands.SaveAs);
+            SaveAsCommandBinding.Executed += SaveAsCommandBindingExecuted;
+            OpenCommandBinding = new CommandBinding(ApplicationCommands.Open);
+            OpenCommandBinding.Executed += OpenCommandBindingExecuted;
+            CommandBindings.Add(ChangeStateCommandBinding);
+            CommandBindings.Add(SaveAsCommandBinding);
+            CommandBindings.Add(OpenCommandBinding);
+
             mainWindowState = new MainWindowSelecting(this);
             hydroObjectGraph = new HydroObjectGraph();
             elementDictionary = new Dictionary<FrameworkElement, HydroObject>();
             Transform = new TranslateTransform();
+        }
+
+        private void OpenCommandBindingExecuted(object sender, ExecutedRoutedEventArgs e)
+        {
+            var dlg = new OpenFileDialog();
+            dlg.DefaultExt = ".sblx";
+            dlg.Filter = "SBLX File (.sblx)|*.sblx";
+            dlg.Multiselect = false;
+
+            if (dlg.ShowDialog(this) == true)
+                LoadFromXmlFile(dlg.OpenFile());
+        }
+
+        private void SaveAsCommandBindingExecuted(object sender, ExecutedRoutedEventArgs e)
+        {
+            var dlg = new SaveFileDialog();
+            dlg.DefaultExt = ".sblx";
+            dlg.Filter = "SBLX File (.sblx)|*.sblx";
+
+            if (dlg.ShowDialog(this) == true)
+                SaveToXmlFile(dlg.OpenFile());
         }
 
         private Rectangle AddConnectNode(Point position)
@@ -233,11 +277,70 @@ namespace HydroSystemModelPreProcess
             drawingCanvas.Children.Remove(element);
         }
 
+        protected void LoadFromXmlFile(Stream stream)
+        {
+            var xdoc = XDocument.Load(stream);
+            var version = xdoc.Root.Attribute("Version").Value;
+            if (version != "1.0.0.0")
+                throw new FileFormatException("Unsupported file version!");
+
+            var xroot = xdoc.Element("HydroObjectFile");
+            hydroObjectGraph.LoadFromXmlFile(xroot);
+            
+        }
+
+        protected void SaveToXmlFile(Stream stream)
+        {
+            var xdoc = new XDocument();
+            xdoc.Add(new XElement("HydroObjectFile", new XAttribute("Version", "1.0.0.0"),
+                hydroObjectGraph.SaveToXmlFile(),
+                new XElement("ElementInfo",
+                    (from e in elementDictionary.Keys
+                     select XmlSerialize(e)).ToArray())));
+
+            xdoc.Save(stream);
+        }
+
+        private XElement XmlSerialize(FrameworkElement element)
+        {
+            var hObject = elementDictionary[element];
+            if (element is Rectangle)
+            {
+                return new XElement(element.GetType().Name, new XAttribute("HydroObjectFullName", hObject.FullName),
+                    new XElement("Left", Canvas.GetLeft(element)),
+                    new XElement("Top", Canvas.GetTop(element)));
+            }
+            else if (element is Line)
+            {
+                var line = element as Line;
+                return new XElement(element.GetType().Name, new XAttribute("HydroObjectFullName", hObject.FullName),
+                    new XElement("X1", line.X1),
+                    new XElement("Y1", line.Y1),
+                    new XElement("X2", line.X2),
+                    new XElement("Y2", line.Y2));
+            }
+            else
+                throw new ArgumentException("Unsupported type " + element.GetType().FullName + " when serializing!");
+        }
+
         private abstract class MainWindowState
         {
             protected MainWindow container;
 
-            protected CommandBinding commandBinding;
+            protected CommandBinding ChangeStateCommandBinding
+            {
+                get { return container.ChangeStateCommandBinding; }
+            }
+
+            protected CommandBinding SaveAsCommandBinding
+            {
+                get { return container.SaveAsCommandBinding; }
+            }
+
+            protected CommandBinding OpenCommandBinding
+            {
+                get { return container.OpenCommandBinding; }
+            }
 
             public MainWindowState(MainWindow _container)
             {
@@ -246,17 +349,16 @@ namespace HydroSystemModelPreProcess
                 drawingCanvas.MouseLeftButtonDown += OnDrawingCanvasMouseLeftButtonDown;
                 drawingCanvas.MouseLeftButtonUp += OnDrawingCanvasMouseLeftButtonUp;
 
-                commandBinding = new CommandBinding(MainWindow.ChangeState);
-                commandBinding.Executed += OnChangeState;
-                commandBinding.CanExecute += CanChangeState;
-                container.CommandBindings.Add(commandBinding);
+                ChangeStateCommandBinding.Executed += OnChangeState;
+                ChangeStateCommandBinding.CanExecute += CanChangeState;
+                SaveAsCommandBinding.CanExecute += CanChangeState;
+                OpenCommandBinding.CanExecute += CanChangeState;
             }
 
             protected FrameworkElement SelectedElement
             {
                 get { return container.SelectedElement; }
                 set { container.SelectedElement = value; }
-                
             }
 
             protected Canvas drawingCanvas
@@ -318,7 +420,11 @@ namespace HydroSystemModelPreProcess
                 drawingCanvas.MouseMove -= OnDrawingCanvasMouseMove;
                 drawingCanvas.MouseLeftButtonDown -= OnDrawingCanvasMouseLeftButtonDown;
                 drawingCanvas.MouseLeftButtonUp -= OnDrawingCanvasMouseLeftButtonUp;
-                container.CommandBindings.Remove(commandBinding);
+
+                ChangeStateCommandBinding.Executed -= OnChangeState;
+                ChangeStateCommandBinding.CanExecute -= CanChangeState;
+                SaveAsCommandBinding.CanExecute -= CanChangeState;
+                OpenCommandBinding.CanExecute -= CanChangeState;
             }
 
             protected virtual void CanChangeState(object sender, CanExecuteRoutedEventArgs e)

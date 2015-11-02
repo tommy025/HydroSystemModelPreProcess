@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using System.Xml.Linq;
 
 namespace HydroSystemModelPreProcess.HydroObjects
 {
@@ -15,5 +16,16 @@ namespace HydroSystemModelPreProcess.HydroObjects
         {
             return (Line)rdict["PressurePipe"];  
         }
+
+        protected override XElement[] ToXml()
+        {
+            return base.ToXml();
+        }
+
+        public PressurePipe()
+        { }
+
+        public PressurePipe(DateTime _creationTime, string Name = "") : base(_creationTime)
+        { }
     }
 }

@@ -9,5 +9,11 @@ using System.Windows;
 namespace HydroSystemModelPreProcess.HydroObjects
 {
     public abstract class HydroEdge : HydroObject
-    { }
+    {
+        public HydroEdge()
+        { }
+
+        public HydroEdge(DateTime _creationTime, string Name = "") : base(_creationTime)
+        { }
+    }
 }
