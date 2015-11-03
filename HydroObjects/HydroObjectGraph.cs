@@ -254,6 +254,11 @@ namespace HydroSystemModelPreProcess.HydroObjects
                     select kvp.Key).ToArray();
         }
 
+        public HydroObject GetObject(string fullName)
+        {
+            return hydroObjects.Single(n => { return n.FullName == fullName; });
+        }
+
         public void LoadFromXmlFile(XElement xroot)
         {
             var xHydroObjects = xroot.Element("HydroObjects");

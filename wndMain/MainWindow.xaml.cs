@@ -98,7 +98,11 @@ namespace HydroSystemModelPreProcess
             dlg.Multiselect = false;
 
             if (dlg.ShowDialog(this) == true)
-                LoadFromXmlFile(dlg.OpenFile());
+            {
+                var stream = dlg.OpenFile();
+                LoadFromXmlFile(stream);
+                stream.Close();
+            }
         }
 
         private void SaveAsCommandBindingExecuted(object sender, ExecutedRoutedEventArgs e)
@@ -108,14 +112,22 @@ namespace HydroSystemModelPreProcess
             dlg.Filter = "SBLX File (.sblx)|*.sblx";
 
             if (dlg.ShowDialog(this) == true)
-                SaveToXmlFile(dlg.OpenFile());
+            {
+                var stream = dlg.OpenFile();
+                SaveToXmlFile(stream);
+                stream.Close();
+            }
         }
 
-        private Rectangle AddConnectNode(Point position)
+        private Rectangle AddConnectNode(Point position, ConnectNode cNode = null)
         {
-            var cNode = new ConnectNode();
-            var element = ConnectNode.GetVisualElement();
-            hydroObjectGraph.Add(cNode);
+            if(cNode == null)
+            {
+                cNode = new ConnectNode();
+                hydroObjectGraph.Add(cNode);
+            }
+            
+            var element = ConnectNode.GetVisualElement();         
             elementDictionary.Add(element, cNode);
 
             Canvas.SetLeft(element, position.X - element.Width / 2);
@@ -126,11 +138,15 @@ namespace HydroSystemModelPreProcess
             return element;
         }
 
-        private Line AddPressurePipe(Visibility visibility)
-        {
-            var pPipe = new PressurePipe();
-            var element = PressurePipe.GetVisualElement();
-            hydroObjectGraph.Add(pPipe);
+        private Line AddPressurePipe(Visibility visibility, PressurePipe pPipe = null)
+        {           
+            if (pPipe == null)
+            {
+                pPipe = new PressurePipe();
+                hydroObjectGraph.Add(pPipe);
+            }
+
+            var element = PressurePipe.GetVisualElement();           
             elementDictionary.Add(element, pPipe);         
 
             Canvas.SetZIndex(element, -1);
@@ -277,8 +293,15 @@ namespace HydroSystemModelPreProcess
             drawingCanvas.Children.Remove(element);
         }
 
+        protected void ClearAllObjectAndElementData()
+        {
+            foreach (var kvp in elementDictionary.ToArray())
+                RemoveObjectAndElementData(kvp.Key);
+        }
+
         protected void LoadFromXmlFile(Stream stream)
         {
+            ClearAllObjectAndElementData();
             var xdoc = XDocument.Load(stream);
             var version = xdoc.Root.Attribute("Version").Value;
             if (version != "1.0.0.0")
@@ -286,7 +309,10 @@ namespace HydroSystemModelPreProcess
 
             var xroot = xdoc.Element("HydroObjectFile");
             hydroObjectGraph.LoadFromXmlFile(xroot);
-            
+            foreach(var xelement in xroot.Element("ElementInfo").Elements("FrameworkElement"))
+            {
+                XmlDeserialize(xelement);
+            }
         }
 
         protected void SaveToXmlFile(Stream stream)
@@ -306,14 +332,18 @@ namespace HydroSystemModelPreProcess
             var hObject = elementDictionary[element];
             if (element is Rectangle)
             {
-                return new XElement(element.GetType().Name, new XAttribute("HydroObjectFullName", hObject.FullName),
-                    new XElement("Left", Canvas.GetLeft(element)),
-                    new XElement("Top", Canvas.GetTop(element)));
+                return new XElement("FrameworkElement", 
+                    new XAttribute("ElementType", element.GetType().Name), 
+                    new XAttribute("HydroObjectFullName", hObject.FullName),
+                    new XElement("Left", Canvas.GetLeft(element) + element.Width / 2),
+                    new XElement("Top", Canvas.GetTop(element) + element.Height / 2));
             }
             else if (element is Line)
             {
                 var line = element as Line;
-                return new XElement(element.GetType().Name, new XAttribute("HydroObjectFullName", hObject.FullName),
+                return new XElement("FrameworkElement",
+                    new XAttribute("ElementType", element.GetType().Name), 
+                    new XAttribute("HydroObjectFullName", hObject.FullName),
                     new XElement("X1", line.X1),
                     new XElement("Y1", line.Y1),
                     new XElement("X2", line.X2),
@@ -321,6 +351,33 @@ namespace HydroSystemModelPreProcess
             }
             else
                 throw new ArgumentException("Unsupported type " + element.GetType().FullName + " when serializing!");
+        }
+
+        private void XmlDeserialize(XElement xelement)
+        {
+            var fullName = xelement.Attribute("HydroObjectFullName").Value;
+            switch(xelement.Attribute("ElementType").Value)
+            {
+                case "Line":
+                    var pPipe = hydroObjectGraph.GetObject(fullName) as PressurePipe;
+                    var element = AddPressurePipe(Visibility.Hidden, pPipe);
+                    SetPipeFirstPoint(element, 
+                        new Point(double.Parse(xelement.Element("X1").Value), double.Parse(xelement.Element("Y1").Value)),
+                        false);
+
+                    SetPipeSecondPoint(element,
+                        new Point(double.Parse(xelement.Element("X2").Value), double.Parse(xelement.Element("Y2").Value)),
+                        false);
+                    element.Visibility = Visibility.Visible;
+
+                    return;
+                case "Rectangle":
+                    var cNode = hydroObjectGraph.GetObject(fullName) as ConnectNode;
+                    AddConnectNode(new Point(double.Parse(xelement.Element("Left").Value), double.Parse(xelement.Element("Top").Value)),
+                        cNode);
+                    
+                    return;
+            }
         }
 
         private abstract class MainWindowState
