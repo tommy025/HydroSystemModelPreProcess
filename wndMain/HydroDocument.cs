@@ -60,37 +60,37 @@ namespace HydroSystemModelPreProcess
             return elementDictionary[element];
         }
 
-        public Rectangle AddConnectNode(Point position, ConnectNode cNode = null)
+        public Rectangle AddConnectNode(Point position)
         {
-            if (cNode == null)
-            {
-                cNode = new ConnectNode();
-                hydroObjectGraph.Add(cNode);
-            }
+            var cNode = new ConnectNode();
+            hydroObjectGraph.Add(cNode);
+            return RegisterConnectNode(position, cNode);
+        }
 
+        private Rectangle RegisterConnectNode(Point position, ConnectNode cNode)
+        {
             var element = ConnectNode.GetVisualElement();
             elementDictionary.Add(element, cNode);
 
             Canvas.SetLeft(element, position.X - element.Width / 2);
             Canvas.SetTop(element, position.Y - element.Height / 2);
-
             return element;
         }
 
-        public Line AddPressurePipe(Visibility visibility, PressurePipe pPipe = null)
+        public Line AddPressurePipe(Visibility visibility)
         {
-            if (pPipe == null)
-            {
-                pPipe = new PressurePipe();
-                hydroObjectGraph.Add(pPipe);
-            }
+            var pPipe = new PressurePipe();
+            hydroObjectGraph.Add(pPipe);
+            return RegisterPressurePipe(visibility, pPipe);     
+        }
 
+        private Line RegisterPressurePipe(Visibility visibility, PressurePipe pPipe)
+        {
             var element = PressurePipe.GetVisualElement();
             elementDictionary.Add(element, pPipe);
 
             Canvas.SetZIndex(element, -1);
             element.Visibility = visibility;
-
             return element;
         }
 
@@ -181,7 +181,10 @@ namespace HydroSystemModelPreProcess
         }
 
         public void Remove(FrameworkElement element)
-        { }
+        {
+            hydroObjectGraph.Remove(elementDictionary[element]);
+            elementDictionary.Remove(element);
+        }
 
         public void Save(Stream stream)
         {
@@ -228,7 +231,7 @@ namespace HydroSystemModelPreProcess
             {
                 case "Line":
                     var pPipe = hydroObjectGraph.GetObject(fullName) as PressurePipe;
-                    var element = AddPressurePipe(Visibility.Hidden, pPipe);
+                    var element = RegisterPressurePipe(Visibility.Hidden, pPipe);
                     SetPipeFirstPoint(element,
                         new Point(double.Parse(xelement.Element("X1").Value), double.Parse(xelement.Element("Y1").Value)));
 
@@ -239,7 +242,7 @@ namespace HydroSystemModelPreProcess
                     return;
                 case "Rectangle":
                     var cNode = hydroObjectGraph.GetObject(fullName) as ConnectNode;
-                    AddConnectNode(new Point(double.Parse(xelement.Element("Left").Value), double.Parse(xelement.Element("Top").Value)),
+                    RegisterConnectNode(new Point(double.Parse(xelement.Element("Left").Value), double.Parse(xelement.Element("Top").Value)),
                         cNode);
 
                     return;

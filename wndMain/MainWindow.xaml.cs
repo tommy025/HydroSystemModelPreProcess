@@ -183,6 +183,7 @@ namespace HydroSystemModelPreProcess
         protected void RegisterHydroElement(FrameworkElement element)
         {
             elementDataDic.Add(element, new ElementData());
+            element.RenderTransform = Transform;
             drawingCanvas.Children.Add(element);
         }
 
@@ -337,11 +338,11 @@ namespace HydroSystemModelPreProcess
             protected override void OnDrawingCanvasMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
             {
                 var hitPosition = e.GetPosition(DrawingCanvas);
-                var hitResult = VisualTreeHelper.HitTest(DrawingCanvas, hitPosition);
-                if (hitResult.VisualHit == null || hitResult.VisualHit == DrawingCanvas)
+                var hitElement = VisualTreeHelper.HitTest(DrawingCanvas, hitPosition).VisualHit;
+                if (hitElement == null || hitElement == DrawingCanvas)
                     return;
 
-                SelectedElement = hitResult.VisualHit as FrameworkElement;
+                SelectedElement = hitElement as FrameworkElement;
                 clickOffset = hitPosition - new Point(Canvas.GetLeft(SelectedElement), Canvas.GetTop(SelectedElement));
                 isDragging = true;
             }
@@ -439,60 +440,80 @@ namespace HydroSystemModelPreProcess
 
             protected override void OnDrawingCanvasMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
             {
-                var hitPosition = container.TransformToCanvasCoSys(e.GetPosition(DrawingCanvas));
-                container.AddConnectNode(hitPosition);
+                var hitPosition = e.GetPosition(DrawingCanvas);
+                var transPosition = container.TransformToCanvasCoSys(hitPosition);
+                container.AddConnectNode(transPosition);
             }
         }
 
         private class MainWindowSettingFirstPPipeNode : MainWindowState
         {
-            public MainWindowSettingFirstPPipeNode(MainWindow _container, Line line) : base(_container)
+            public MainWindowSettingFirstPPipeNode(MainWindow _container, Line _originalElement) : base(_container)
             {
-                if (line == null)
-                {
-                    element = container.AddPressurePipe(Visibility.Hidden);
-                    isCreating = true;
-                }
-                else
-                {
-                    element = line;
-                    originalFirstElementPos = new Point(line.X1, line.Y1);
-                }
+                element = container.AddPressurePipe(Visibility.Hidden);
+                originalElement = _originalElement;
+                if(!IsCreating)
+                {   
+                    originalElement.Visibility = Visibility.Hidden;
+                    element.X1 = originalElement.X1;
+                    element.Y1 = originalElement.Y1;
+                    element.X2 = originalElement.X2;
+                    element.Y2 = originalElement.Y2;
+                    element.Visibility = Visibility.Visible;
+                }      
             }
 
-            private bool isCreating;
+            private bool IsCreating
+            {
+                get { return originalElement == null; }
+            }
 
             private Line element
             { get; set; }
 
-            private Point originalFirstElementPos;
+            private Line originalElement;
 
             protected override void OnDrawingCanvasMouseMove(object sender, MouseEventArgs e)
             {
-                if(!isCreating)
+                if(!IsCreating)
                 {
-                    var mousePos = container.TransformToCanvasCoSys(e.GetPosition(DrawingCanvas));
-                    container.SetPipeFirstPoint(element, mousePos);
+                    var mousePos = e.GetPosition(DrawingCanvas);
+                    var transPosition = container.TransformToCanvasCoSys(mousePos);
+                    container.SetPipeFirstPoint(element, transPosition);
                 }
             }
 
             protected override void OnDrawingCanvasMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
             {
-                var hitPosition = container.TransformToCanvasCoSys(e.GetPosition(DrawingCanvas));
-                container.SetPipeFirstPoint(element, hitPosition);
+                var hitPosition = e.GetPosition(DrawingCanvas);
+                var hitElement = VisualTreeHelper.HitTest(DrawingCanvas, hitPosition).VisualHit;
+                if (hitElement == DrawingCanvas || hitElement == element)
+                {
+                    var transPosition = container.TransformToCanvasCoSys(hitPosition);
+                    container.SetPipeFirstPoint(element, transPosition);
+                }
+                else if (hitElement is Rectangle)
+                {
+                    if (container.SetPipeFirstNode(element, hitElement as Rectangle) == false)
+                        return;
+                }
+                else
+                    return;
+
                 var re = new RoutedPropertyChangedEventArgs<MainWindowState>(this, 
-                    new MainWindowSettingSecondPPipeNode(container, element, isCreating, originalFirstElementPos));              
+                    new MainWindowSettingSecondPPipeNode(container, element, originalElement));              
                 OnChangeState(this, re);
             }
 
             protected override void LeaveState(MainWindowState newState)
             {
                 base.LeaveState(newState);
-                if(!isCreating)
+                if(!IsCreating)
                 {
                     if(!(newState is MainWindowSettingSecondPPipeNode))
                     {
-                        container.SetPipeFirstPoint(element, originalFirstElementPos);
+                        container.RemoveHydroElement(element);
+                        originalElement.Visibility = Visibility.Visible;
                     }
                 }    
                 else
@@ -507,54 +528,42 @@ namespace HydroSystemModelPreProcess
 
         private class MainWindowSettingSecondPPipeNode : MainWindowState
         {
-            public MainWindowSettingSecondPPipeNode(MainWindow _container, Line line, bool _isCreating, Point _originalFirstElementPos) : base(_container)
+            public MainWindowSettingSecondPPipeNode(MainWindow _container, Line _line, Line _originalElement) : base(_container)
             {
-                if (line == null)
+                if (_line == null)
                     throw new ArgumentNullException("Input line element must not be null!");
 
-                element = line;
-                isCreating = _isCreating;         
-                originalFirstElementPos = _originalFirstElementPos;
-                originalSecondElementPos = new Point(line.X2, line.Y2);
-                container.SetPipeFirstNode(element, VisualTreeHelper.HitTest(DrawingCanvas, new Point(line.X1, line.Y1)).VisualHit as Rectangle);
-                container.SetPipeSecondPoint(element, new Point(line.X1, line.Y1));
-                container.SetPipeSecondNode(element, null);
+                element = _line;
+                originalElement = _originalElement;       
+                container.SetPipeSecondPoint(element, new Point(_line.X1, _line.Y1));
                 element.Visibility = Visibility.Visible;
             }
 
-            private bool isCreating;
-
-            private Point originalFirstElementPos;
-
-            private Point originalSecondElementPos;
-
-            private Rectangle originalFirstElement
+            private bool IsCreating
             {
-                get { return VisualTreeHelper.HitTest(DrawingCanvas, originalFirstElementPos).VisualHit as Rectangle; }
-            }
-
-            private Rectangle originalSecondElement
-            {
-                get { return VisualTreeHelper.HitTest(DrawingCanvas, originalSecondElementPos).VisualHit as Rectangle; }
+                get { return originalElement == null; }
             }
         
             private Line element
             { get; set; }
 
+            private Line originalElement;
+
             protected override void OnDrawingCanvasMouseMove(object sender, MouseEventArgs e)
             {
-                var mousePos = container.TransformToCanvasCoSys(e.GetPosition(DrawingCanvas));
-                container.SetPipeSecondPoint(element, mousePos);
+                var mousePos = e.GetPosition(DrawingCanvas);
+                var transPosition = container.TransformToCanvasCoSys(mousePos);
+                container.SetPipeSecondPoint(element, transPosition);
             }
 
             protected override void OnDrawingCanvasMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
             {
-                var hitPosition = e.GetPosition(DrawingCanvas);
+                var hitPosition = e.GetPosition(DrawingCanvas);            
                 var hitElement = VisualTreeHelper.HitTest(DrawingCanvas, hitPosition).VisualHit as FrameworkElement;
                 if (hitElement == DrawingCanvas || hitElement == element)
                 {
-                    hitPosition = container.TransformToCanvasCoSys(hitPosition);
-                    container.SetPipeSecondPoint(element, hitPosition);
+                    var transPosition = container.TransformToCanvasCoSys(hitPosition);
+                    container.SetPipeSecondPoint(element, transPosition);
                 }
                 else if (hitElement is Rectangle)
                 {
@@ -564,7 +573,7 @@ namespace HydroSystemModelPreProcess
                 else
                     return;
 
-                var re = new RoutedPropertyChangedEventArgs<MainWindowState>(this, (isCreating ?
+                var re = new RoutedPropertyChangedEventArgs<MainWindowState>(this, (IsCreating ?
                     new MainWindowSettingFirstPPipeNode(container, null) as MainWindowState :
                     new MainWindowReconnecting(container) as MainWindowState));
                 OnChangeState(this, re);
@@ -573,14 +582,15 @@ namespace HydroSystemModelPreProcess
             protected override void LeaveState(MainWindowState newState)
             {
                 base.LeaveState(newState);
-                if (!isCreating)
+                if (!IsCreating)
                 {
                     if (!(newState is MainWindowReconnecting))
                     {
-                        container.SetPipeSecondNode(element, null);
-                        container.SetPipeFirstNode(element, originalFirstElement);
-                        container.SetPipeSecondNode(element, originalSecondElement);
+                        container.RemoveHydroElement(element);
+                        originalElement.Visibility = Visibility.Visible;
                     }
+                    else
+                        container.RemoveHydroElement(originalElement);
                 }
                 else
                 {
