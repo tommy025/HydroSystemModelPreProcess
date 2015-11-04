@@ -32,11 +32,9 @@ namespace HydroSystemModelPreProcess
             get { return changeState; }
         }
 
-        private HydroObjectGraph hydroObjectGraph;
-
         private MainWindowState mainWindowState;
 
-        private Dictionary<FrameworkElement, HydroObject> elementDictionary;
+        private Dictionary<FrameworkElement, ElementData> elementDataDic; 
 
         private FrameworkElement selectedElement;
 
@@ -47,7 +45,7 @@ namespace HydroSystemModelPreProcess
             {
                 if (selectedElement == value ||
                     selectedElement != null && 
-                    !elementDictionary.ContainsKey(selectedElement))
+                    !elementDataDic.ContainsKey(selectedElement))
                     return;
 
                 if (selectedElement != null)
@@ -71,6 +69,9 @@ namespace HydroSystemModelPreProcess
         public CommandBinding OpenCommandBinding
         { get; private set; }
 
+        public HydroDocument HydroDocument
+        { get; private set; }      
+
         public MainWindow()
         {
             InitializeComponent();
@@ -85,9 +86,11 @@ namespace HydroSystemModelPreProcess
             CommandBindings.Add(OpenCommandBinding);
 
             mainWindowState = new MainWindowSelecting(this);
-            hydroObjectGraph = new HydroObjectGraph();
-            elementDictionary = new Dictionary<FrameworkElement, HydroObject>();
+            //hydroObjectGraph = new HydroObjectGraph();
+            //elementDictionary = new Dictionary<FrameworkElement, HydroObject>();
             Transform = new TranslateTransform();
+            HydroDocument = new HydroDocument();
+            elementDataDic = new Dictionary<FrameworkElement, ElementData>();
         }
 
         private void OpenCommandBindingExecuted(object sender, ExecutedRoutedEventArgs e)
@@ -99,9 +102,10 @@ namespace HydroSystemModelPreProcess
 
             if (dlg.ShowDialog(this) == true)
             {
-                var stream = dlg.OpenFile();
-                LoadFromXmlFile(stream);
-                stream.Close();
+                using (var stream = dlg.OpenFile())
+                {
+                    ReLoadHydroDocument(stream);
+                }
             }
         }
 
@@ -113,73 +117,12 @@ namespace HydroSystemModelPreProcess
 
             if (dlg.ShowDialog(this) == true)
             {
-                var stream = dlg.OpenFile();
-                SaveToXmlFile(stream);
-                stream.Close();
-            }
-        }
-
-        private Rectangle AddConnectNode(Point position, ConnectNode cNode = null)
-        {
-            if(cNode == null)
-            {
-                cNode = new ConnectNode();
-                hydroObjectGraph.Add(cNode);
-            }
-            
-            var element = ConnectNode.GetVisualElement();         
-            elementDictionary.Add(element, cNode);
-
-            Canvas.SetLeft(element, position.X - element.Width / 2);
-            Canvas.SetTop(element, position.Y - element.Height / 2);
-            element.RenderTransform = Transform;
-            drawingCanvas.Children.Add(element);
-
-            return element;
-        }
-
-        private Line AddPressurePipe(Visibility visibility, PressurePipe pPipe = null)
-        {           
-            if (pPipe == null)
-            {
-                pPipe = new PressurePipe();
-                hydroObjectGraph.Add(pPipe);
-            }
-
-            var element = PressurePipe.GetVisualElement();           
-            elementDictionary.Add(element, pPipe);         
-
-            Canvas.SetZIndex(element, -1);
-            element.RenderTransform = Transform;
-            drawingCanvas.Children.Add(element);
-            element.Visibility = visibility;
-
-            return element;
-        }
-
-        private void MoveNode(Rectangle node, Point position)
-        {
-            var selectedObject = elementDictionary[SelectedElement];
-
-            Canvas.SetLeft(SelectedElement, position.X);
-            Canvas.SetTop(SelectedElement, position.Y);
-
-            var connectEdges = hydroObjectGraph.GetEdges(selectedObject as HydroVertex);
-            foreach (var edge in connectEdges)
-            {
-                var element = elementDictionary.First(kvp => { return kvp.Value == edge; }).Key as Line;
-                if (hydroObjectGraph.GetVertex1(edge as HydroEdge) == selectedObject)
+                using (var stream = dlg.OpenFile())
                 {
-                    element.X1 = Canvas.GetLeft(SelectedElement) + SelectedElement.Width / 2;
-                    element.Y1 = Canvas.GetTop(SelectedElement) + SelectedElement.Height / 2;
-                }
-                else
-                {
-                    element.X2 = Canvas.GetLeft(SelectedElement) + SelectedElement.Width / 2;
-                    element.Y2 = Canvas.GetTop(SelectedElement) + SelectedElement.Height / 2;
+                    HydroDocument.Save(stream);
                 }
             }
-        }     
+        }
 
         private void MoveScreen(Vector v)
         {
@@ -192,224 +135,104 @@ namespace HydroSystemModelPreProcess
             return Transform.Inverse.Transform(p);
         }
 
-        private void SetPipeFirstPoint(FrameworkElement element, Point position, bool shouldTransform)
+        public Rectangle AddConnectNode(Point position)
         {
-            if (element is Line)
-            {
-                var pPipe = element as Line;
-                if (shouldTransform)
-                    position = TransformToCanvasCoSys(position);
-
-                pPipe.X1 = position.X;
-                pPipe.Y1 = position.Y;
-            }
+            var element = HydroDocument.AddConnectNode(position);
+            RegisterHydroElement(element);
+            return element;
         }
 
-        private void SetPipeSecondPoint(FrameworkElement element, Point position, bool shouldTransform)
+        public Line AddPressurePipe(Visibility visibility)
         {
-            if (element is Line)
-            {
-                var pPipe = element as Line;
-                if (shouldTransform)
-                    position = TransformToCanvasCoSys(position);
-
-                pPipe.X2 = position.X;
-                pPipe.Y2 = position.Y;
-            }
+            var element = HydroDocument.AddPressurePipe(visibility);
+            RegisterHydroElement(element);
+            return element;
         }
 
-        private bool SetPipeFirstNode(FrameworkElement element, Rectangle node)
+        public void RemoveHydroElement(FrameworkElement element)
         {
-            if (element is Line)
-            {
-                var pPipe = element as Line;
-                var hEdge = elementDictionary[element] as HydroEdge;
-
-                if (node == null)
-                {
-                    hydroObjectGraph.SetVertex1(hEdge, null);
-                    return true;
-                }
-
-                var hVertex = elementDictionary[node] as HydroVertex;
-                if (hydroObjectGraph.GetVertex2(hEdge) == hVertex)
-                    return false;
-
-                if (hydroObjectGraph.GetVertex1(hEdge) != hVertex)
-                    hydroObjectGraph.SetVertex1(hEdge, hVertex);
-
-                SetPipeFirstPoint(element, new Point(
-                    Canvas.GetLeft(node) + node.Width / 2,
-                    Canvas.GetTop(node) + node.Height / 2),
-                    false);
-
-                return true;
-            }
-            else
-                return false;
+            HydroDocument.Remove(element);
+            UnregisterHydroElement(element);
         }
 
-        private bool SetPipeSecondNode(FrameworkElement element, Rectangle node)
+        public void MoveNode(Rectangle node, Point position)
         {
-            if (element is Line)
-            {
-                var pPipe = element as Line;
-                var hEdge = elementDictionary[element] as HydroEdge;
-
-                if (node == null)
-                {
-                    hydroObjectGraph.SetVertex2(hEdge, null);
-                    return true;
-                }
-
-                var hVertex = elementDictionary[node] as HydroVertex; 
-                if (hydroObjectGraph.GetVertex1(hEdge) == hVertex)
-                    return false;
-
-                var hOtherVertex = hydroObjectGraph.GetVertex1(hEdge);
-                if (hydroObjectGraph.IsConnected(hOtherVertex, hVertex) &&
-                    !hydroObjectGraph.IsBetween(hEdge, hVertex, hOtherVertex)) 
-                    return false;
-
-                if (hydroObjectGraph.GetVertex2(hEdge) != hVertex)
-                    hydroObjectGraph.SetVertex2(hEdge, hVertex);
-
-                SetPipeSecondPoint(element, new Point(
-                    Canvas.GetLeft(node) + node.Width / 2,
-                    Canvas.GetTop(node) + node.Height / 2),
-                    false);
-
-                return true;
-            }
-            else
-                return false;
+            HydroDocument.MoveNode(node, position);
         }
 
-        private void RemoveObjectAndElementData(FrameworkElement element)
+        public void SetPipeFirstPoint(Line pPipe, Point position)
         {
-            var hydroObject = elementDictionary[element];
-            hydroObjectGraph.Remove(hydroObject);
-            elementDictionary.Remove(element);
+            HydroDocument.SetPipeFirstPoint(pPipe, position);
+        }
+
+        public void SetPipeSecondPoint(Line pPipe, Point position)
+        {
+            HydroDocument.SetPipeSecondPoint(pPipe, position);
+        }
+
+        public bool SetPipeFirstNode(Line pPipe, Rectangle node)
+        {
+            return HydroDocument.SetPipeFirstNode(pPipe, node);
+        }
+
+        public bool SetPipeSecondNode(Line pPipe, Rectangle node)
+        {
+            return HydroDocument.SetPipeSecondNode(pPipe, node);
+        }
+
+        protected void RegisterHydroElement(FrameworkElement element)
+        {
+            elementDataDic.Add(element, new ElementData());
+            drawingCanvas.Children.Add(element);
+        }
+
+        protected void UnregisterHydroElement(FrameworkElement element)
+        {
+            if (SelectedElement == element)
+                SelectedElement = null;
+
+            elementDataDic.Remove(element);
             drawingCanvas.Children.Remove(element);
         }
 
-        protected void ClearAllObjectAndElementData()
+        protected void ReLoadHydroDocument(Stream stream)
         {
-            foreach (var kvp in elementDictionary.ToArray())
-                RemoveObjectAndElementData(kvp.Key);
+            ClearHydroElements();
+            HydroDocument = HydroDocument.Load(stream);
+            foreach (var element in HydroDocument.GetElements())
+                RegisterHydroElement(element);
         }
 
-        protected void LoadFromXmlFile(Stream stream)
+        protected void ClearHydroElements()
         {
-            ClearAllObjectAndElementData();
-            var xdoc = XDocument.Load(stream);
-            var version = xdoc.Root.Attribute("Version").Value;
-            if (version != "1.0.0.0")
-                throw new FileFormatException("Unsupported file version!");
-
-            var xroot = xdoc.Element("HydroObjectFile");
-            hydroObjectGraph.LoadFromXmlFile(xroot);
-            foreach(var xelement in xroot.Element("ElementInfo").Elements("FrameworkElement"))
-            {
-                XmlDeserialize(xelement);
-            }
+            foreach (var kvp in elementDataDic.ToArray())
+                RemoveHydroElement(kvp.Key);
         }
 
-        protected void SaveToXmlFile(Stream stream)
+        private class ElementData
         {
-            var xdoc = new XDocument();
-            xdoc.Add(new XElement("HydroObjectFile", new XAttribute("Version", "1.0.0.0"),
-                hydroObjectGraph.SaveToXmlFile(),
-                new XElement("ElementInfo",
-                    (from e in elementDictionary.Keys
-                     select XmlSerialize(e)).ToArray())));
+            public FrameworkElement NameElement
+            { get; set; }
 
-            xdoc.Save(stream);
-        }
-
-        private XElement XmlSerialize(FrameworkElement element)
-        {
-            var hObject = elementDictionary[element];
-            if (element is Rectangle)
-            {
-                return new XElement("FrameworkElement", 
-                    new XAttribute("ElementType", element.GetType().Name), 
-                    new XAttribute("HydroObjectFullName", hObject.FullName),
-                    new XElement("Left", Canvas.GetLeft(element) + element.Width / 2),
-                    new XElement("Top", Canvas.GetTop(element) + element.Height / 2));
-            }
-            else if (element is Line)
-            {
-                var line = element as Line;
-                return new XElement("FrameworkElement",
-                    new XAttribute("ElementType", element.GetType().Name), 
-                    new XAttribute("HydroObjectFullName", hObject.FullName),
-                    new XElement("X1", line.X1),
-                    new XElement("Y1", line.Y1),
-                    new XElement("X2", line.X2),
-                    new XElement("Y2", line.Y2));
-            }
-            else
-                throw new ArgumentException("Unsupported type " + element.GetType().FullName + " when serializing!");
-        }
-
-        private void XmlDeserialize(XElement xelement)
-        {
-            var fullName = xelement.Attribute("HydroObjectFullName").Value;
-            switch(xelement.Attribute("ElementType").Value)
-            {
-                case "Line":
-                    var pPipe = hydroObjectGraph.GetObject(fullName) as PressurePipe;
-                    var element = AddPressurePipe(Visibility.Hidden, pPipe);
-                    SetPipeFirstPoint(element, 
-                        new Point(double.Parse(xelement.Element("X1").Value), double.Parse(xelement.Element("Y1").Value)),
-                        false);
-
-                    SetPipeSecondPoint(element,
-                        new Point(double.Parse(xelement.Element("X2").Value), double.Parse(xelement.Element("Y2").Value)),
-                        false);
-                    element.Visibility = Visibility.Visible;
-
-                    return;
-                case "Rectangle":
-                    var cNode = hydroObjectGraph.GetObject(fullName) as ConnectNode;
-                    AddConnectNode(new Point(double.Parse(xelement.Element("Left").Value), double.Parse(xelement.Element("Top").Value)),
-                        cNode);
-                    
-                    return;
-            }
+            public HydroObject DataObject
+            { get; set; }
         }
 
         private abstract class MainWindowState
         {
             protected MainWindow container;
 
-            protected CommandBinding ChangeStateCommandBinding
-            {
-                get { return container.ChangeStateCommandBinding; }
-            }
-
-            protected CommandBinding SaveAsCommandBinding
-            {
-                get { return container.SaveAsCommandBinding; }
-            }
-
-            protected CommandBinding OpenCommandBinding
-            {
-                get { return container.OpenCommandBinding; }
-            }
-
             public MainWindowState(MainWindow _container)
             {
                 container = _container;
-                drawingCanvas.MouseMove += OnDrawingCanvasMouseMove;
-                drawingCanvas.MouseLeftButtonDown += OnDrawingCanvasMouseLeftButtonDown;
-                drawingCanvas.MouseLeftButtonUp += OnDrawingCanvasMouseLeftButtonUp;
+                DrawingCanvas.MouseMove += OnDrawingCanvasMouseMove;
+                DrawingCanvas.MouseLeftButtonDown += OnDrawingCanvasMouseLeftButtonDown;
+                DrawingCanvas.MouseLeftButtonUp += OnDrawingCanvasMouseLeftButtonUp;
 
-                ChangeStateCommandBinding.Executed += OnChangeState;
-                ChangeStateCommandBinding.CanExecute += CanChangeState;
-                SaveAsCommandBinding.CanExecute += CanChangeState;
-                OpenCommandBinding.CanExecute += CanChangeState;
+                container.ChangeStateCommandBinding.Executed += OnChangeState;
+                container.ChangeStateCommandBinding.CanExecute += CanChangeState;
+                container.SaveAsCommandBinding.CanExecute += CanChangeState;
+                container.OpenCommandBinding.CanExecute += CanChangeState;
             }
 
             protected FrameworkElement SelectedElement
@@ -418,7 +241,7 @@ namespace HydroSystemModelPreProcess
                 set { container.SelectedElement = value; }
             }
 
-            protected Canvas drawingCanvas
+            protected Canvas DrawingCanvas
             {
                 get{ return container.drawingCanvas; }
             }
@@ -474,14 +297,14 @@ namespace HydroSystemModelPreProcess
             /// <param name="newState"></param>
             protected virtual void LeaveState(MainWindowState newState)
             {
-                drawingCanvas.MouseMove -= OnDrawingCanvasMouseMove;
-                drawingCanvas.MouseLeftButtonDown -= OnDrawingCanvasMouseLeftButtonDown;
-                drawingCanvas.MouseLeftButtonUp -= OnDrawingCanvasMouseLeftButtonUp;
+                DrawingCanvas.MouseMove -= OnDrawingCanvasMouseMove;
+                DrawingCanvas.MouseLeftButtonDown -= OnDrawingCanvasMouseLeftButtonDown;
+                DrawingCanvas.MouseLeftButtonUp -= OnDrawingCanvasMouseLeftButtonUp;
 
-                ChangeStateCommandBinding.Executed -= OnChangeState;
-                ChangeStateCommandBinding.CanExecute -= CanChangeState;
-                SaveAsCommandBinding.CanExecute -= CanChangeState;
-                OpenCommandBinding.CanExecute -= CanChangeState;
+                container.ChangeStateCommandBinding.Executed -= OnChangeState;
+                container.ChangeStateCommandBinding.CanExecute -= CanChangeState;
+                container.SaveAsCommandBinding.CanExecute -= CanChangeState;
+                container.OpenCommandBinding.CanExecute -= CanChangeState;
             }
 
             protected virtual void CanChangeState(object sender, CanExecuteRoutedEventArgs e)
@@ -505,7 +328,7 @@ namespace HydroSystemModelPreProcess
                 {
                     if (SelectedElement is Rectangle && isDragging == true)
                     { 
-                        var drawPosition = e.GetPosition(drawingCanvas) - clickOffset;
+                        var drawPosition = e.GetPosition(DrawingCanvas) - clickOffset;
                         container.MoveNode(SelectedElement as Rectangle, drawPosition);
                     }
                 }
@@ -513,9 +336,9 @@ namespace HydroSystemModelPreProcess
 
             protected override void OnDrawingCanvasMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
             {
-                var hitPosition = e.GetPosition(drawingCanvas);
-                var hitResult = VisualTreeHelper.HitTest(drawingCanvas, hitPosition);
-                if (hitResult.VisualHit == null || hitResult.VisualHit == drawingCanvas)
+                var hitPosition = e.GetPosition(DrawingCanvas);
+                var hitResult = VisualTreeHelper.HitTest(DrawingCanvas, hitPosition);
+                if (hitResult.VisualHit == null || hitResult.VisualHit == DrawingCanvas)
                     return;
 
                 SelectedElement = hitResult.VisualHit as FrameworkElement;
@@ -542,13 +365,13 @@ namespace HydroSystemModelPreProcess
 
             protected override void OnDrawingCanvasMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
             {
-                var hitPosition = e.GetPosition(drawingCanvas);
-                var hitResult = VisualTreeHelper.HitTest(drawingCanvas, hitPosition);
+                var hitPosition = e.GetPosition(DrawingCanvas);
+                var hitResult = VisualTreeHelper.HitTest(DrawingCanvas, hitPosition);
                 var hitElement = hitResult.VisualHit as FrameworkElement;
 
-                if (hitElement != drawingCanvas)
+                if (hitElement != DrawingCanvas)
                 {
-                    container.RemoveObjectAndElementData(hitElement);
+                    container.RemoveHydroElement(hitElement);
                 }
             }
         }
@@ -562,8 +385,8 @@ namespace HydroSystemModelPreProcess
 
             protected override void OnDrawingCanvasMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
             {
-                var hitPosition = e.GetPosition(drawingCanvas);
-                var hitElement = VisualTreeHelper.HitTest(drawingCanvas, hitPosition).VisualHit as FrameworkElement;
+                var hitPosition = e.GetPosition(DrawingCanvas);
+                var hitElement = VisualTreeHelper.HitTest(DrawingCanvas, hitPosition).VisualHit as FrameworkElement;
 
                 if (hitElement is Line)
                 {
@@ -590,22 +413,22 @@ namespace HydroSystemModelPreProcess
             {
                 if (isDragging == true)
                 {
-                    var vector = e.GetPosition(drawingCanvas) - lastPos;                 
+                    var vector = e.GetPosition(DrawingCanvas) - lastPos;                 
                     container.MoveScreen(vector);
-                    lastPos = e.GetPosition(drawingCanvas);
+                    lastPos = e.GetPosition(DrawingCanvas);
                 }              
             }
 
             protected override void OnDrawingCanvasMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
             {               
                 isDragging = true;
-                lastPos = e.GetPosition(drawingCanvas);
+                lastPos = e.GetPosition(DrawingCanvas);
             }
 
             protected override void OnDrawingCanvasMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
             {              
                 isDragging = false;
-                lastPos = e.GetPosition(drawingCanvas);
+                lastPos = e.GetPosition(DrawingCanvas);
             }
         }
 
@@ -616,7 +439,7 @@ namespace HydroSystemModelPreProcess
 
             protected override void OnDrawingCanvasMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
             {
-                var hitPosition = container.TransformToCanvasCoSys(e.GetPosition(drawingCanvas));
+                var hitPosition = container.TransformToCanvasCoSys(e.GetPosition(DrawingCanvas));
                 container.AddConnectNode(hitPosition);
             }
         }
@@ -648,15 +471,15 @@ namespace HydroSystemModelPreProcess
             {
                 if(!isCreating)
                 {
-                    var mousePos = e.GetPosition(drawingCanvas);
-                    container.SetPipeFirstPoint(element, mousePos, true);
+                    var mousePos = container.TransformToCanvasCoSys(e.GetPosition(DrawingCanvas));
+                    container.SetPipeFirstPoint(element, mousePos);
                 }
             }
 
             protected override void OnDrawingCanvasMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
             {
-                var hitPosition = e.GetPosition(drawingCanvas);
-                container.SetPipeFirstPoint(element, hitPosition, true);
+                var hitPosition = container.TransformToCanvasCoSys(e.GetPosition(DrawingCanvas));
+                container.SetPipeFirstPoint(element, hitPosition);
                 var re = new RoutedPropertyChangedEventArgs<MainWindowState>(this, 
                     new MainWindowSettingSecondPPipeNode(container, element, isCreating, originalFirstElementPos));              
                 OnChangeState(this, re);
@@ -669,14 +492,14 @@ namespace HydroSystemModelPreProcess
                 {
                     if(!(newState is MainWindowSettingSecondPPipeNode))
                     {
-                        container.SetPipeFirstPoint(element, originalFirstElementPos, false);
+                        container.SetPipeFirstPoint(element, originalFirstElementPos);
                     }
                 }    
                 else
                 {
                     if (!(newState is MainWindowSettingSecondPPipeNode))
                     {
-                        container.RemoveObjectAndElementData(element);
+                        container.RemoveHydroElement(element);
                     }
                 }         
             }
@@ -693,8 +516,8 @@ namespace HydroSystemModelPreProcess
                 isCreating = _isCreating;         
                 originalFirstElementPos = _originalFirstElementPos;
                 originalSecondElementPos = new Point(line.X2, line.Y2);
-                container.SetPipeFirstNode(element, VisualTreeHelper.HitTest(drawingCanvas, new Point(line.X1, line.Y1)).VisualHit as Rectangle);
-                container.SetPipeSecondPoint(element, new Point(line.X1, line.Y1), false);
+                container.SetPipeFirstNode(element, VisualTreeHelper.HitTest(DrawingCanvas, new Point(line.X1, line.Y1)).VisualHit as Rectangle);
+                container.SetPipeSecondPoint(element, new Point(line.X1, line.Y1));
                 container.SetPipeSecondNode(element, null);
                 element.Visibility = Visibility.Visible;
             }
@@ -707,12 +530,12 @@ namespace HydroSystemModelPreProcess
 
             private Rectangle originalFirstElement
             {
-                get { return VisualTreeHelper.HitTest(drawingCanvas, originalFirstElementPos).VisualHit as Rectangle; }
+                get { return VisualTreeHelper.HitTest(DrawingCanvas, originalFirstElementPos).VisualHit as Rectangle; }
             }
 
             private Rectangle originalSecondElement
             {
-                get { return VisualTreeHelper.HitTest(drawingCanvas, originalSecondElementPos).VisualHit as Rectangle; }
+                get { return VisualTreeHelper.HitTest(DrawingCanvas, originalSecondElementPos).VisualHit as Rectangle; }
             }
         
             private Line element
@@ -720,17 +543,18 @@ namespace HydroSystemModelPreProcess
 
             protected override void OnDrawingCanvasMouseMove(object sender, MouseEventArgs e)
             {
-                var mousePos = e.GetPosition(drawingCanvas);
-                container.SetPipeSecondPoint(element, mousePos, true);
+                var mousePos = container.TransformToCanvasCoSys(e.GetPosition(DrawingCanvas));
+                container.SetPipeSecondPoint(element, mousePos);
             }
 
             protected override void OnDrawingCanvasMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
             {
-                var hitPosition = e.GetPosition(drawingCanvas);
-                var hitElement = VisualTreeHelper.HitTest(drawingCanvas, hitPosition).VisualHit as FrameworkElement;
-                if (hitElement == drawingCanvas || hitElement == element)
+                var hitPosition = e.GetPosition(DrawingCanvas);
+                var hitElement = VisualTreeHelper.HitTest(DrawingCanvas, hitPosition).VisualHit as FrameworkElement;
+                if (hitElement == DrawingCanvas || hitElement == element)
                 {
-                    container.SetPipeSecondPoint(element, hitPosition, true);
+                    hitPosition = container.TransformToCanvasCoSys(hitPosition);
+                    container.SetPipeSecondPoint(element, hitPosition);
                 }
                 else if (hitElement is Rectangle)
                 {
@@ -761,7 +585,7 @@ namespace HydroSystemModelPreProcess
                 else
                 {
                     if (!(newState is MainWindowSettingFirstPPipeNode))
-                        container.RemoveObjectAndElementData(element);
+                        container.RemoveHydroElement(element);
                 }
             }
 

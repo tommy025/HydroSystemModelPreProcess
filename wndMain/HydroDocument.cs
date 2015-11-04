@@ -20,7 +20,7 @@ using Microsoft.Win32;
 
 namespace HydroSystemModelPreProcess
 {
-    class HydroDocument
+    public class HydroDocument
     {
         public static HydroDocument Load(Stream stream)
         {
@@ -49,6 +49,16 @@ namespace HydroSystemModelPreProcess
         protected HydroObjectGraph hydroObjectGraph;
 
         protected Dictionary<FrameworkElement, HydroObject> elementDictionary;
+
+        public FrameworkElement[] GetElements()
+        {
+            return elementDictionary.Keys.ToArray(); 
+        }
+
+        public HydroObject GetHydroObject(FrameworkElement element)
+        {
+            return elementDictionary[element];
+        }
 
         public Rectangle AddConnectNode(Point position, ConnectNode cNode = null)
         {
@@ -84,19 +94,42 @@ namespace HydroSystemModelPreProcess
             return element;
         }
 
-        private void SetPipeFirstPoint(Line pPipe, Point position)
+        public void MoveNode(Rectangle node, Point position)
+        {
+            var selectedObject = elementDictionary[node];
+            Canvas.SetLeft(node, position.X);
+            Canvas.SetTop(node, position.Y);
+
+            var connectEdges = hydroObjectGraph.GetEdges(selectedObject as HydroVertex);
+            foreach (var edge in connectEdges)
+            {
+                var element = elementDictionary.First(kvp => { return kvp.Value == edge; }).Key as Line;
+                if (hydroObjectGraph.GetVertex1(edge as HydroEdge) == selectedObject)
+                {
+                    element.X1 = position.X + node.Width / 2;
+                    element.Y1 = position.Y + node.Height / 2;
+                }
+                else
+                {
+                    element.X2 = position.X + node.Width / 2;
+                    element.Y2 = position.Y + node.Height / 2;
+                }
+            }
+        }
+
+        public void SetPipeFirstPoint(Line pPipe, Point position)
         {
             pPipe.X1 = position.X;
             pPipe.Y1 = position.Y;
         }
 
-        private void SetPipeSecondPoint(Line pPipe, Point position)
+        public void SetPipeSecondPoint(Line pPipe, Point position)
         {
             pPipe.X2 = position.X;
             pPipe.Y2 = position.Y;            
         }
 
-        private bool SetPipeFirstNode(Line pPipe, Rectangle node)
+        public bool SetPipeFirstNode(Line pPipe, Rectangle node)
         {
             var hEdge = elementDictionary[pPipe] as HydroEdge;
             if (node == null)
@@ -119,7 +152,7 @@ namespace HydroSystemModelPreProcess
             return true;
         }
 
-        private bool SetPipeSecondNode(Line pPipe, Rectangle node)
+        public bool SetPipeSecondNode(Line pPipe, Rectangle node)
         {
             var hEdge = elementDictionary[pPipe] as HydroEdge;
             if (node == null)
@@ -146,6 +179,9 @@ namespace HydroSystemModelPreProcess
 
             return true;
         }
+
+        public void Remove(FrameworkElement element)
+        { }
 
         public void Save(Stream stream)
         {
