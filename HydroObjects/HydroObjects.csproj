@@ -52,10 +52,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Page Include="generic.xaml">
+    <Resource Include="generic.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
-    </Page>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Icons\ConnectNodeIcon.bmp" />

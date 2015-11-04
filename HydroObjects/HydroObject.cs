@@ -11,7 +11,8 @@ namespace HydroSystemModelPreProcess.HydroObjects
 {
     public abstract class HydroObject : INotifyPropertyChanged
     {
-        protected const string rdictSource = "HydroObjects;component/generic.xaml";
+        //This lead to UnitTest not working since pack URI requires System.Windows.Application while UnitTest didn't create one.
+        protected const string rdictSource = "pack://application:,,,/HydroObjects;component/generic.xaml";
 
         protected static readonly ResourceDictionary rdict;
 
