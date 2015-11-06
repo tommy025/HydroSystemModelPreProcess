@@ -8,8 +8,8 @@
                     <Setter Property="Line.Stroke" Value="Black"></Setter>
                     <Setter Property="Line.StrokeThickness" Value="5"></Setter>
                 </Style.Setters>
-                
-                
+
+
                 <Style.Triggers>
                     <Trigger Property="Line.Tag" Value="Selected">
                         <Setter Property="Line.Stroke" Value="Red"></Setter>
@@ -19,30 +19,7 @@
             </Style>
         </Line.Style>
     </Line>
-  
-    <!--
-    <Border x:Key="ConnectNodeIcon" x:Shared="false">
-        <Image Source="Icons/ConnectNodeIcon.bmp" 
-               Canvas.Left="{Binding Path=(Canvas.Left), Mode=TwoWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Border}}}"
-               Canvas.Top="{Binding Path=(Canvas.Top), Mode=TwoWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Border}}}"
-               Tag="{Binding Path=Tag, Mode=TwoWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Border}}}"></Image>
 
-        <Border.Style>
-            <Style>
-                <Style.Setters>
-                    <Setter Property="Border.BorderThickness" Value="5"></Setter>
-                </Style.Setters>
-                
-                <Style.Triggers>
-                    <Trigger Property="Border.Tag" Value="Selected">
-                        <Setter Property="Border.BorderBrush" Value="Red"></Setter>
-                    </Trigger>
-                </Style.Triggers>
-            </Style>
-        </Border.Style>
-    </Border>
-    -->
-    
     <Rectangle x:Key="ConnectNodeIcon" x:Shared="false" Height="64" Width="64">
         <Rectangle.Fill>
             <ImageBrush ImageSource="Icons/ConnectNodeIcon.bmp" Stretch="Fill"></ImageBrush>
@@ -62,4 +39,25 @@
             </Style>
         </Rectangle.Style>
     </Rectangle>
+
+    <ScrollViewer x:Key="PressurePipePropertyControl" Margin="3,3">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="auto"></ColumnDefinition>
+                <ColumnDefinition Width="*"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"></RowDefinition>
+                <RowDefinition Height="auto"></RowDefinition>
+            </Grid.RowDefinitions>
+
+            <Label Grid.Column="0" Grid.Row="0">名称：</Label>
+            <TextBox Grid.Column="1" Grid.Row="0" Text="{Binding Path=Name}" Margin="3,3,3,3"></TextBox>
+
+            <Label Grid.Column="0" Grid.Row="1">糙率：</Label>
+            <TextBox Grid.Column="1" Grid.Row="1" Text="{Binding Path=Roughness}" Margin="3,3,3,3"></TextBox>
+        </Grid>
+    </ScrollViewer>
+
 </ResourceDictionary>

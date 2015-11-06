@@ -20,10 +20,10 @@ namespace HydroSystemModelPreProcess.HydroObjects
             return base.ToXml();
         }
 
-        public ConnectNode()
+        public ConnectNode() : this(DateTime.Now)
         { }
 
-        public ConnectNode(DateTime _creationTime, string Name = "") : base(_creationTime)
+        public ConnectNode(DateTime _creationTime, string _name = "") : base(_creationTime, _name)
         { }
     }
 }

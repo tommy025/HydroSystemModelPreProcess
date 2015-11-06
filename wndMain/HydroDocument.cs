@@ -180,6 +180,15 @@ namespace HydroSystemModelPreProcess
             return true;
         }
 
+        public FrameworkElement GetPropertySettingControl(FrameworkElement element)
+        {
+            var hydroObject = elementDictionary[element];
+            if (hydroObject is PressurePipe)
+                return PressurePipe.GetPropertySettingControl();
+            else
+                return null;
+        }
+
         public void Remove(FrameworkElement element)
         {
             hydroObjectGraph.Remove(elementDictionary[element]);

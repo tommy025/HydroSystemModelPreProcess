@@ -52,9 +52,28 @@ namespace HydroSystemModelPreProcess
                     selectedElement.Tag = "";
 
                 selectedElement = value;
+                ClearPropertySettingControl();
                 if (selectedElement != null)
+                {
                     selectedElement.Tag = "Selected";
+                    LoadPropertySettingControl();
+                }
             }
+        }
+
+        private void LoadPropertySettingControl()
+        {    
+            var psCtrl = HydroDocument.GetPropertySettingControl(selectedElement);
+            if (psCtrl != null)
+            {
+                dkpProperties.Children.Add(psCtrl);
+                dkpProperties.DataContext = elementDataDic[selectedElement].DataObject;
+            }
+        }
+
+        private void ClearPropertySettingControl()
+        {
+            dkpProperties.Children.Clear();
         }
 
         public TranslateTransform Transform
@@ -182,7 +201,8 @@ namespace HydroSystemModelPreProcess
 
         protected void RegisterHydroElement(FrameworkElement element)
         {
-            elementDataDic.Add(element, new ElementData());
+            var elementData = new ElementData(HydroDocument.GetHydroObject(element));
+            elementDataDic.Add(element, elementData);
             element.RenderTransform = Transform;
             drawingCanvas.Children.Add(element);
         }
@@ -212,6 +232,17 @@ namespace HydroSystemModelPreProcess
 
         private class ElementData
         {
+            public ElementData(HydroObject hydroObject)
+            {
+                DataObject = hydroObject;
+                var textBlock = new TextBlock();
+                var textBinding = new Binding();
+                textBinding.Source = this;
+                textBinding.Path = new PropertyPath("DataObject.Name");
+                textBlock.SetBinding(TextBlock.TextProperty, textBinding);
+                NameElement = textBlock;
+            }
+
             public FrameworkElement NameElement
             { get; set; }
 

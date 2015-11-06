@@ -17,17 +17,35 @@ namespace HydroSystemModelPreProcess.HydroObjects
             return (Line)rdict["PressurePipe"];  
         }
 
-        protected override XElement[] ToXml()
+        public static FrameworkElement GetPropertySettingControl()
         {
-            return base.ToXml();
+            return rdict["PressurePipePropertyControl"] as FrameworkElement;
         }
 
-        public PressurePipe()
+        protected override XElement[] ToXml()
+        {
+            return new XElement[]
+            {
+                new XElement("Roughness", Roughness)
+            };
+        }
+
+        public PressurePipe() : this(DateTime.Now)
         { }
 
-        public PressurePipe(DateTime _creationTime, string Name = "") : base(_creationTime)
+        public PressurePipe(DateTime _creationTime, string _name = "") : base(_creationTime, _name)
         { }
 
+        private double roughness;
 
+        public double Roughness
+        {
+            get { return roughness; }
+            set
+            {
+                roughness = value;
+                TriggerPropertyChangedEvent("Roughness");
+            }
+        }
     }
 }

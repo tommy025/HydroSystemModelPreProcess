@@ -18,10 +18,10 @@ namespace HydroSystemModelPreProcess.HydroObjects
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected void TriggerPropertyChangedEvent(PropertyChangedEventArgs e)
+        protected void TriggerPropertyChangedEvent(string propertyName)
         {
             if (PropertyChanged != null)
-                PropertyChanged(this, e);
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
         }
 
         static HydroObject()
@@ -30,17 +30,23 @@ namespace HydroSystemModelPreProcess.HydroObjects
             rdict.Source = new Uri(rdictSource, UriKind.RelativeOrAbsolute);
         }
 
-        public HydroObject() : this(DateTime.Now)
-        { }
-
-        public HydroObject(DateTime _creationTime, string _name = "")
+        public HydroObject(DateTime _creationTime, string _name)
         {
             Name = _name;
             creationTime = _creationTime;
         }
 
+        private string name;
+
         public string Name
-        { get; set; }
+        {
+            get { return name; }
+            set
+            {
+                name = value;
+                TriggerPropertyChangedEvent("Name");
+            }
+        }
 
         private readonly DateTime creationTime;
 
@@ -70,14 +76,17 @@ namespace HydroSystemModelPreProcess.HydroObjects
 
         public static HydroObject XmlDeserialize(XElement xelement)
         {
-            var name = xelement.Attributes().Single(a => { return a.Name.LocalName == "HydroObjectName"; });
-            var creationTime = xelement.Attributes().Single(a => { return a.Name.LocalName == "CreationTime"; });
+            var name = xelement.Attribute("HydroObjectName").Value;
+            var creationTime = xelement.Attribute("CreationTime").Value;
             switch (xelement.Name.LocalName)
             {
                 case "ConnectNode":
-                    return new ConnectNode(DateTime.Parse(creationTime.Value), name.Value);
+                    return new ConnectNode(DateTime.Parse(creationTime), name);
                 case "PressurePipe":
-                    return new PressurePipe(DateTime.Parse(creationTime.Value), name.Value);
+                    return new PressurePipe(DateTime.Parse(creationTime), name)
+                    {
+                        Roughness = double.Parse(xelement.Element("Roughness").Value)
+                    };
                 default:
                     throw new ArgumentException("Unsupported type " + xelement.Name.LocalName + " when loading from file!");
             }
