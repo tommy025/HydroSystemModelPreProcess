@@ -57,6 +57,7 @@
     <ProjectReference Include="..\HydroObjects\HydroObjects.csproj">
       <Project>{2c22858e-36a2-4ae6-841d-c3302c554e47}</Project>
       <Name>HydroObjects</Name>
+      <Private>True</Private>
     </ProjectReference>
   </ItemGroup>
   <Choose>

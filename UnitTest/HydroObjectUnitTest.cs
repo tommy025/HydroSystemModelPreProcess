@@ -46,8 +46,6 @@ namespace HydroSystemModelPreProcess.UnitTest
 
             graph.Remove(vertexV6);
 
-            graph.TrySetVertex(edgeE7, vertexV5);
-
             graph.Remove(edgeE7);
         }
     }

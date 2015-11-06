@@ -1,0 +1,63 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:HydroSystemModelPreProcess.HydroObjects">
+    <Line x:Key="PressurePipe" x:Shared="false">
+        <Line.Style>
+            <Style>
+                <Style.Setters>
+                    <Setter Property="Line.Stroke" Value="Black"></Setter>
+                    <Setter Property="Line.StrokeThickness" Value="5"></Setter>
+                </Style.Setters>
+
+
+                <Style.Triggers>
+                    <Trigger Property="Line.Tag" Value="Selected">
+                        <Setter Property="Line.Stroke" Value="Red"></Setter>
+                        <Setter Property="Line.StrokeThickness" Value="8"></Setter>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+        </Line.Style>
+    </Line>
+
+    <Rectangle x:Key="ConnectNodeIcon" x:Shared="false" Height="64" Width="64">
+        <Rectangle.Fill>
+            <ImageBrush ImageSource="Icons/ConnectNodeIcon.bmp" Stretch="Fill"></ImageBrush>
+        </Rectangle.Fill>
+
+        <Rectangle.Style>
+            <Style>
+                <Style.Setters>
+                    <Setter Property="Rectangle.StrokeThickness" Value="5"></Setter>
+                </Style.Setters>
+
+                <Style.Triggers>
+                    <Trigger Property="Rectangle.Tag" Value="Selected">
+                        <Setter Property="Rectangle.Stroke" Value="Red"></Setter>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+        </Rectangle.Style>
+    </Rectangle>
+
+    <ScrollViewer x:Key="PressurePipePropertyControl" Margin="3,3">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="auto"></ColumnDefinition>
+                <ColumnDefinition Width="*"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"></RowDefinition>
+                <RowDefinition Height="auto"></RowDefinition>
+            </Grid.RowDefinitions>
+
+            <Label Grid.Column="0" Grid.Row="0">名称：</Label>
+            <TextBox Grid.Column="1" Grid.Row="0" Text="{Binding Path=Name}" Margin="3,3,3,3"></TextBox>
+
+            <Label Grid.Column="0" Grid.Row="1">糙率：</Label>
+            <TextBox Grid.Column="1" Grid.Row="1" Text="{Binding Path=Roughness}" Margin="3,3,3,3"></TextBox>
+        </Grid>
+    </ScrollViewer>
+
+</ResourceDictionary>
