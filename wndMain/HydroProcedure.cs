@@ -7,15 +7,21 @@ using System.Windows.Shapes;
 using System.Collections.Specialized;
 using HydroSystemModelPreProcess.HydroObjects;
 using System.Collections;
+using System.ComponentModel;
+using System.Windows;
 
 namespace HydroSystemModelPreProcess
 {
-    public abstract class HydroProcedure : IDisposable
+    public abstract class HydroProcedure : IDisposable, INotifyPropertyChanged
     {
         protected HydroProcedure(HydroProcedure other)
         {
+            Name = other.name;
+            PropertyChanged += other.PropertyChanged;
+
             hydroObjectGraph = other.hydroObjectGraph;
             hydroObjectGraph.CollectionChanged += OnHydroObjectGraphCollectionChanged;
+
             elementDataDictionary = new Dictionary<Shape, HydroObject>();
             foreach (var kvp in other.elementDataDictionary)
             {
@@ -31,10 +37,20 @@ namespace HydroSystemModelPreProcess
             AddItems(hydroObjectGraph);            
         }
 
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected void TriggerPropertyChangedEvent(string propertyName)
+        {
+            if (PropertyChanged != null)
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+        }
+
         private HydroObject CreateHydroObject(Shape shape)
         {
             var hydroObjectInfo = shape.DataContext as IHydroObjectInfo;
-            return HydroResourceHelper.CreateHydroObject(hydroObjectInfo.HydroObjectType);
+            var hydroObject = HydroResourceHelper.CreateHydroObject(hydroObjectInfo.HydroObjectType);
+            hydroObject.Tag = hydroObjectInfo;
+            return hydroObject;
         }
 
         private void AddItems(IEnumerable items)
@@ -80,6 +96,11 @@ namespace HydroSystemModelPreProcess
 
         protected Dictionary<Shape, HydroObject> elementDataDictionary;
 
+        public IDictionary<Shape, HydroObject> ElementDataDictionary
+        {
+            get { return elementDataDictionary; }
+        }
+
         public virtual void ExecuteCalculation()
         { }
 
@@ -94,5 +115,22 @@ namespace HydroSystemModelPreProcess
         }
 
         public abstract HydroProcedure DeepClone();
+
+        private string name = "<新建工况>";
+
+        public string Name
+        {
+            get { return name; }
+            set
+            {
+                name = value ?? name;
+                TriggerPropertyChangedEvent("Name");
+            }
+        }
+
+        public FrameworkElement PropertySettingControl
+        {
+            get { return HydroResourceHelper.GetProcedurePropertySettingControl(GetType()); }
+        }
     }
 }

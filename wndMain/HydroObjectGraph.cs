@@ -22,15 +22,15 @@ namespace HydroSystemModelPreProcess
         }
 
         public void AddVertex(Rectangle vertex, Type type)
-        {
-            hydroElements.Add(vertex);
+        {           
             vertex.DataContext = new HydroObjectInfo(vertex, type);
+            hydroElements.Add(vertex);
         }
 
         public void AddEdge(Line edge, Type type)
-        {
-            hydroElements.Add(edge);
+        {         
             edge.DataContext = new HydroObjectInfo(edge, type);
+            hydroElements.Add(edge);
             hydroEdges.Add(edge, new HydroEdgeInfo());
         }
 
@@ -181,12 +181,6 @@ namespace HydroSystemModelPreProcess
                     select kvp.Key).ToArray();
         }
 
-        public Shape GetObject(string name)
-        {
-            return null;
-            //return hydroElementInfo.Where(kvp => kvp.Value.Name == name)
-        }
-
         public IEnumerator<Shape> GetEnumerator()
         {
             return hydroElements.GetEnumerator();
@@ -242,7 +236,7 @@ namespace HydroSystemModelPreProcess
             { get; set; }
 
             public string Name
-            { get; set; } = "";
+            { get; set; } = "<新建对象>";
 
             public string FullName
             {
@@ -255,6 +249,11 @@ namespace HydroSystemModelPreProcess
             public string HydroObjectTypeName
             {
                 get { return HydroObjectType.Name; }              
+            }
+
+            public FrameworkElement PropertySettingControl
+            {
+                get { return HydroResourceHelper.GetHydroObjectPropertySettingControl(HydroObjectType); }
             }
         }
 
@@ -337,5 +336,8 @@ namespace HydroSystemModelPreProcess
 
         string HydroObjectTypeName
         { get; }
+
+        FrameworkElement PropertySettingControl
+        { get; }     
     }
 }

@@ -27,6 +27,9 @@ namespace HydroSystemModelPreProcess.HydroObjects
                 PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
         }
 
+        public object Tag
+        { get; set; }
+
         public abstract HydroObject DeepClone();
 
         //public XElement XmlSerialize()

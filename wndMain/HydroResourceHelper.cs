@@ -54,7 +54,18 @@ namespace HydroSystemModelPreProcess
             return element;
         }
 
-        public static FrameworkElement GetPropertySettingControl(Type type)
+        public static FrameworkElement GetProcedurePropertySettingControl(Type type)
+        {
+            switch (type.Name)
+            {
+                case nameof(HeadLossCalculation):
+                    return rdict["HeadLossProcedurePropertyControl"] as FrameworkElement;
+                default:
+                    return null;
+            }
+        }
+
+        public static FrameworkElement GetHydroObjectPropertySettingControl(Type type)
         {
             switch (type.Name)
             {

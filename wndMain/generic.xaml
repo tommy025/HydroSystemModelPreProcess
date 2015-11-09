@@ -40,7 +40,27 @@
         </Rectangle.Style>
     </Rectangle>
 
-    <ScrollViewer x:Key="PressurePipePropertyControl" Margin="3,3">
+    <ScrollViewer x:Key="PressurePipePropertyControl" Margin="2">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="auto"></ColumnDefinition>
+                <ColumnDefinition Width="*"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"></RowDefinition>
+                <RowDefinition Height="auto"></RowDefinition>
+            </Grid.RowDefinitions>
+
+            <Label Grid.Column="0" Grid.Row="0">名称：</Label>
+            <TextBox Grid.Column="1" Grid.Row="0" Text="{Binding Path=Tag.Name}" Margin="3,3,3,3"></TextBox>
+
+            <Label Grid.Column="0" Grid.Row="1">糙率：</Label>
+            <TextBox Grid.Column="1" Grid.Row="1" Text="{Binding Path=Roughness}" Margin="3,3,3,3"></TextBox>
+        </Grid>
+    </ScrollViewer>
+    
+    <ScrollViewer x:Key="HeadLossProcedurePropertyControl" Margin="2">
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="auto"></ColumnDefinition>
@@ -54,10 +74,6 @@
 
             <Label Grid.Column="0" Grid.Row="0">名称：</Label>
             <TextBox Grid.Column="1" Grid.Row="0" Text="{Binding Path=Name}" Margin="3,3,3,3"></TextBox>
-
-            <Label Grid.Column="0" Grid.Row="1">糙率：</Label>
-            <TextBox Grid.Column="1" Grid.Row="1" Text="{Binding Path=Roughness}" Margin="3,3,3,3"></TextBox>
         </Grid>
     </ScrollViewer>
-
 </ResourceDictionary>

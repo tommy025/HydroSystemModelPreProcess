@@ -187,7 +187,7 @@ namespace HydroSystemModelPreProcess
         public FrameworkElement GetPropertySettingControl(FrameworkElement element)
         {
             var hydroObjectInfo = element.DataContext as IHydroObjectInfo;
-            return HydroResourceHelper.GetPropertySettingControl(hydroObjectInfo.HydroObjectType);
+            return HydroResourceHelper.GetHydroObjectPropertySettingControl(hydroObjectInfo.HydroObjectType);
         }
 
         public bool Remove(FrameworkElement element)

@@ -34,7 +34,5 @@ namespace HydroSystemModelPreProcess
         Line[] GetEdges(Rectangle vertex);
 
         Line[] GetEdges(Rectangle vertex1, Rectangle vertex2);
-
-        Shape GetObject(string name);
     }
 }

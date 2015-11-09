@@ -25,7 +25,7 @@ namespace HydroSystemModelPreProcess
     /// </summary>
     public partial class MainWindow : Window
     {
-        private static RoutedUICommand changeState = new RoutedUICommand("ChangeState", "ChangeState", typeof(MainWindow));
+        private static RoutedUICommand changeState = new RoutedUICommand(nameof(ChangeState), nameof(ChangeState), typeof(MainWindow));
 
         public static RoutedUICommand ChangeState
         {
@@ -52,28 +52,11 @@ namespace HydroSystemModelPreProcess
                     selectedElement.Tag = "";
 
                 selectedElement = value;
-                ClearPropertySettingControl();
                 if (selectedElement != null)
                 {
                     selectedElement.Tag = "Selected";
-                    LoadPropertySettingControl();
                 }
             }
-        }
-
-        private void LoadPropertySettingControl()
-        {    
-            //var psCtrl = HydroDocument.GetPropertySettingControl(selectedElement);
-            //if (psCtrl != null)
-            //{
-            //    dkpProperties.Children.Add(psCtrl);
-            //    dkpProperties.DataContext = elementDataDic[selectedElement].DataObject;
-            //}
-        }
-
-        private void ClearPropertySettingControl()
-        {
-            dkpProperties.Children.Clear();
         }
 
         public TranslateTransform Transform
@@ -105,8 +88,6 @@ namespace HydroSystemModelPreProcess
             CommandBindings.Add(OpenCommandBinding);
 
             mainWindowState = new MainWindowSelecting(this);
-            //hydroObjectGraph = new HydroObjectGraph();
-            //elementDictionary = new Dictionary<FrameworkElement, HydroObject>();
             Transform = new TranslateTransform();
             HydroDocument = new HydroDocument();
             elementDataDic = new Dictionary<FrameworkElement, ElementData>();
@@ -630,6 +611,13 @@ namespace HydroSystemModelPreProcess
             {
                 e.CanExecute = false;
             }
+        }
+
+        private void OnMenuItemOpenProcedureManagerClick(object sender, RoutedEventArgs e)
+        {
+            var wndProcedureManager = new ProcedureManagerWindow();
+            wndProcedureManager.DataContext = HydroDocument;
+            wndProcedureManager.ShowDialog();
         }
     }
 }

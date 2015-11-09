@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:HydroSystemModelPreProcess"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800" MinWidth="400">
+        Title="MainWindow" Height="576" Width="1024" MinWidth="400">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"></RowDefinition>
@@ -24,18 +24,7 @@
                 <MenuItem Header="退出(_X)"/>
             </MenuItem>
             <MenuItem Header="编辑(_E)">
-                <MenuItem Header="撤销(_U)"/>
-                <MenuItem Header="重做(_R)"/>
-                <Separator/>
-                <MenuItem Header="删除(_D)"/>
-                <Separator/>
-                <MenuItem Header="全选(_A)"/>
-                <MenuItem Header="选中所有管道(_I)"/>
-                <MenuItem Header="选中所有节点(_N)"/>
-            </MenuItem>
-            <MenuItem Header="查看(_V)">
-                <MenuItem Header="工具栏(_T)" IsCheckable="True"/>
-                <MenuItem Header="状态栏(_S)"/>
+                <MenuItem Name="mnuiOpenProcedureManager" Header="工况管理窗口(_P)" Click="OnMenuItemOpenProcedureManagerClick"/>
             </MenuItem>
             <MenuItem Header="查询(_Q)">
                 <MenuItem Header="管道属性列表"/>
@@ -96,9 +85,7 @@
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="auto"></ColumnDefinition>
-                <ColumnDefinition Width="4*"></ColumnDefinition>
-                <ColumnDefinition Width="auto"></ColumnDefinition>
-                <ColumnDefinition Width="3*" MinWidth="200"></ColumnDefinition>
+                <ColumnDefinition Width="*"></ColumnDefinition>
             </Grid.ColumnDefinitions>
 
             <ToolBarTray Grid.Column="0" Orientation="Vertical">
@@ -114,47 +101,6 @@
 
             <Canvas x:Name="drawingCanvas" Grid.Column="1"
                     Background="White" ClipToBounds="True"/>
-
-            <GridSplitter Grid.Column="2" Width="3" VerticalAlignment="Stretch" HorizontalAlignment="Center"></GridSplitter>
-
-            <Grid Grid.Column="3">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*"></RowDefinition>
-                    <RowDefinition Height="auto"></RowDefinition>
-                    <RowDefinition Height="2*"></RowDefinition>
-                </Grid.RowDefinitions>
-                
-                <Grid Grid.Row="0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="2*"></ColumnDefinition>
-                        <ColumnDefinition Width="*"></ColumnDefinition>
-                    </Grid.ColumnDefinitions>
-
-                    <ListBox Name="lbxProcedures" Grid.Column="0"></ListBox>
-
-                    <StackPanel Grid.Column="1" Orientation="Vertical">
-                        <Button>新建工况</Button>
-                        <Button>复制工况</Button>
-                        <Button>删除工况</Button>
-                    </StackPanel>
-                </Grid>
-
-                <GridSplitter Grid.Row="1" Height="3" VerticalAlignment="Center" HorizontalAlignment="Stretch"></GridSplitter>
-
-                <Grid Grid.Row="2">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"></ColumnDefinition>
-                        <ColumnDefinition Width="auto"></ColumnDefinition>
-                        <ColumnDefinition Width="2*"></ColumnDefinition>
-                    </Grid.ColumnDefinitions>
-
-                    <ListBox Grid.Column="0"></ListBox>
-
-                    <GridSplitter Grid.Column="1" Width="3" VerticalAlignment="Stretch" HorizontalAlignment="Center"></GridSplitter>
-
-                    <DockPanel Grid.Column="2" Name="dkpProperties"></DockPanel>
-                </Grid>
-            </Grid>
         </Grid>    
     </Grid>
 </Window>

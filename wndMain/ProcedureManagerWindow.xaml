@@ -1,0 +1,47 @@
+﻿<Window x:Class="HydroSystemModelPreProcess.ProcedureManagerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:HydroSystemModelPreProcess"
+        mc:Ignorable="d"
+        Title="ProcedureManagerWindow" Height="450" Width="800" MinHeight="300" MinWidth="400">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"></ColumnDefinition>
+            <ColumnDefinition Width="*"></ColumnDefinition>
+            <ColumnDefinition Width="*"></ColumnDefinition>
+            <ColumnDefinition Width="*"></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+
+        <GroupBox Header="工况列表">
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"></RowDefinition>
+                    <RowDefinition Height="auto"></RowDefinition>
+                    <RowDefinition Height="auto"></RowDefinition>
+                    <RowDefinition Height="auto"></RowDefinition>
+                </Grid.RowDefinitions>
+
+                <ListBox Grid.Row="0" Name="lbxProcedures" Margin="2" ItemsSource="{Binding}" DisplayMemberPath="Name"></ListBox>
+                <Button Grid.Row="1" Name="btnAddProcedure" Margin="2" Click="OnButtonAddProcedureClick">添加工况</Button>
+                <Button Grid.Row="2" Name="btnDuplicateProcedure" Margin="2" Command="local:ProcedureManagerWindow.DuplicateProcedure">复制工况</Button>
+                <Button Grid.Row="3" Name="btnRemoveProcedure" Margin="2" Command="local:ProcedureManagerWindow.RemoveProcedure">删除工况</Button>
+            </Grid>
+        </GroupBox>
+
+        <GroupBox Grid.Column="1" Name="gbxProcedureProperties" Header="工况属性"
+                  DataContext="{Binding ElementName=lbxProcedures, Path=SelectedItem}"
+                  Content="{Binding ElementName=lbxProcedures, Path=SelectedItem.PropertySettingControl}">
+        </GroupBox>
+
+        <GroupBox Grid.Column="2" Header="水力对象列表">
+            <ListBox Name="lbxHydroObjects" Margin="2" DisplayMemberPath="Key.DataContext.Name"
+                     ItemsSource="{Binding ElementName=lbxProcedures, Path=SelectedItem.ElementDataDictionary}"></ListBox>
+        </GroupBox>
+
+        <GroupBox Grid.Column="3" Name="gbxHydroObjectProperties" Header="水力对象属性"
+                  DataContext="{Binding ElementName=lbxHydroObjects, Path=SelectedItem.Value}"
+                  Content="{Binding ElementName=lbxHydroObjects, Path=SelectedItem.Key.DataContext.PropertySettingControl}"/>
+    </Grid>
+</Window>
