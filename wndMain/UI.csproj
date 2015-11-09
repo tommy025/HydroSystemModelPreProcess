@@ -58,6 +58,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Page Include="generic.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -66,7 +70,12 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="HeadLossCalculation.cs" />
     <Compile Include="HydroDocument.cs" />
+    <Compile Include="HydroObjectGraph.cs" />
+    <Compile Include="HydroProcedure.cs" />
+    <Compile Include="HydroResourceHelper.cs" />
+    <Compile Include="IReadOnlyHydroObjectGraph.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -104,6 +113,9 @@
       <Project>{2c22858e-36a2-4ae6-841d-c3302c554e47}</Project>
       <Name>HydroObjects</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\ConnectNodeIcon.bmp" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -10,7 +10,10 @@ namespace HydroSystemModelPreProcess.HydroObjects
 {
     public abstract class HydroEdge : HydroObject
     {
-        public HydroEdge(DateTime _creationTime, string _name) : base(_creationTime, _name)
+        public HydroEdge()
+        { }
+
+        public HydroEdge(HydroEdge other) : base(other)
         { }
     }
 }

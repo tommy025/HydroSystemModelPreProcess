@@ -63,12 +63,12 @@ namespace HydroSystemModelPreProcess
 
         private void LoadPropertySettingControl()
         {    
-            var psCtrl = HydroDocument.GetPropertySettingControl(selectedElement);
-            if (psCtrl != null)
-            {
-                dkpProperties.Children.Add(psCtrl);
-                dkpProperties.DataContext = elementDataDic[selectedElement].DataObject;
-            }
+            //var psCtrl = HydroDocument.GetPropertySettingControl(selectedElement);
+            //if (psCtrl != null)
+            //{
+            //    dkpProperties.Children.Add(psCtrl);
+            //    dkpProperties.DataContext = elementDataDic[selectedElement].DataObject;
+            //}
         }
 
         private void ClearPropertySettingControl()
@@ -114,33 +114,64 @@ namespace HydroSystemModelPreProcess
 
         private void OpenCommandBindingExecuted(object sender, ExecutedRoutedEventArgs e)
         {
-            var dlg = new OpenFileDialog();
-            dlg.DefaultExt = ".sblx";
-            dlg.Filter = "SBLX File (.sblx)|*.sblx";
-            dlg.Multiselect = false;
+            //var dlg = new OpenFileDialog();
+            //dlg.DefaultExt = ".sblx";
+            //dlg.Filter = "SBLX File (.sblx)|*.sblx";
+            //dlg.Multiselect = false;
 
-            if (dlg.ShowDialog(this) == true)
-            {
-                using (var stream = dlg.OpenFile())
-                {
-                    ReLoadHydroDocument(stream);
-                }
-            }
+            //if (dlg.ShowDialog(this) == true)
+            //{
+            //    using (var stream = dlg.OpenFile())
+            //    {
+            //        ReLoadHydroDocument(stream);
+            //    }
+            //}
         }
 
         private void SaveAsCommandBindingExecuted(object sender, ExecutedRoutedEventArgs e)
         {
-            var dlg = new SaveFileDialog();
-            dlg.DefaultExt = ".sblx";
-            dlg.Filter = "SBLX File (.sblx)|*.sblx";
+            //var dlg = new SaveFileDialog();
+            //dlg.DefaultExt = ".sblx";
+            //dlg.Filter = "SBLX File (.sblx)|*.sblx";
 
-            if (dlg.ShowDialog(this) == true)
-            {
-                using (var stream = dlg.OpenFile())
-                {
-                    HydroDocument.Save(stream);
-                }
-            }
+            //if (dlg.ShowDialog(this) == true)
+            //{
+            //    using (var stream = dlg.OpenFile())
+            //    {
+            //        HydroDocument.Save(stream);
+            //    }
+            //}
+        }
+
+        protected void RegisterHydroElement(FrameworkElement element)
+        {
+            var elementData = new ElementData();
+            elementDataDic.Add(element, elementData);
+            element.RenderTransform = Transform;
+            drawingCanvas.Children.Add(element);
+        }
+
+        protected void UnregisterHydroElement(FrameworkElement element)
+        {
+            if (SelectedElement == element)
+                SelectedElement = null;
+
+            elementDataDic.Remove(element);
+            drawingCanvas.Children.Remove(element);
+        }
+
+        //protected void ReLoadHydroDocument(Stream stream)
+        //{
+        //    ClearHydroElements();
+        //    HydroDocument = HydroDocument.Load(stream);
+        //    foreach (var element in HydroDocument.GetElements())
+        //        RegisterHydroElement(element);
+        //}
+
+        protected void ClearHydroElements()
+        {
+            foreach (var kvp in elementDataDic.ToArray())
+                RemoveHydroElement(kvp.Key);
         }
 
         private void MoveScreen(Vector v)
@@ -163,7 +194,7 @@ namespace HydroSystemModelPreProcess
 
         public Line AddPressurePipe(Visibility visibility)
         {
-            var element = HydroDocument.AddPressurePipe(visibility);
+            var element = HydroDocument.AddPressurePipe();
             RegisterHydroElement(element);
             return element;
         }
@@ -176,7 +207,7 @@ namespace HydroSystemModelPreProcess
 
         public void MoveNode(Rectangle node, Point position)
         {
-            HydroDocument.MoveNode(node, position);
+            HydroDocument.MoveVertex(node, position);
         }
 
         public void SetPipeFirstPoint(Line pPipe, Point position)
@@ -191,62 +222,27 @@ namespace HydroSystemModelPreProcess
 
         public bool SetPipeFirstNode(Line pPipe, Rectangle node)
         {
-            return HydroDocument.SetPipeFirstNode(pPipe, node);
+            return HydroDocument.SetPipeFirstVertex(pPipe, node);
         }
 
         public bool SetPipeSecondNode(Line pPipe, Rectangle node)
         {
-            return HydroDocument.SetPipeSecondNode(pPipe, node);
-        }
-
-        protected void RegisterHydroElement(FrameworkElement element)
-        {
-            var elementData = new ElementData(HydroDocument.GetHydroObject(element));
-            elementDataDic.Add(element, elementData);
-            element.RenderTransform = Transform;
-            drawingCanvas.Children.Add(element);
-        }
-
-        protected void UnregisterHydroElement(FrameworkElement element)
-        {
-            if (SelectedElement == element)
-                SelectedElement = null;
-
-            elementDataDic.Remove(element);
-            drawingCanvas.Children.Remove(element);
-        }
-
-        protected void ReLoadHydroDocument(Stream stream)
-        {
-            ClearHydroElements();
-            HydroDocument = HydroDocument.Load(stream);
-            foreach (var element in HydroDocument.GetElements())
-                RegisterHydroElement(element);
-        }
-
-        protected void ClearHydroElements()
-        {
-            foreach (var kvp in elementDataDic.ToArray())
-                RemoveHydroElement(kvp.Key);
+            return HydroDocument.SetPipeSecondVertex(pPipe, node);
         }
 
         private class ElementData
         {
-            public ElementData(HydroObject hydroObject)
+            public ElementData()
             {
-                DataObject = hydroObject;
                 var textBlock = new TextBlock();
                 var textBinding = new Binding();
                 textBinding.Source = this;
                 textBinding.Path = new PropertyPath("DataObject.Name");
                 textBlock.SetBinding(TextBlock.TextProperty, textBinding);
-                NameElement = textBlock;
+                LabelElement = textBlock;
             }
 
-            public FrameworkElement NameElement
-            { get; set; }
-
-            public HydroObject DataObject
+            public FrameworkElement LabelElement
             { get; set; }
         }
 
@@ -288,9 +284,9 @@ namespace HydroSystemModelPreProcess
             { }
 
             protected void OnChangeState(object sender, RoutedEventArgs e)
-            {        
+            {
                 var newState = null as MainWindowState;
-                if(sender == this)
+                if (sender == this)
                 {
                     newState = (e as RoutedPropertyChangedEventArgs<MainWindowState>).NewValue;
                 }
@@ -298,7 +294,7 @@ namespace HydroSystemModelPreProcess
                 {
                     newState = new MainWindowSelecting(container);
                 }
-                else if(e.OriginalSource == container.rbtnDelete)
+                else if (e.OriginalSource == container.rbtnDelete)
                 {
                     newState = new MainWindowDeleting(container);
                 }

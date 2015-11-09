@@ -10,20 +10,20 @@ namespace HydroSystemModelPreProcess.HydroObjects
 {
     public class ConnectNode : HydroVertex
     {
-        public static Rectangle GetVisualElement()
+        public ConnectNode()
+        { }
+
+        public ConnectNode(ConnectNode other) : base(other)
+        { }
+
+        public override HydroObject DeepClone()
         {
-            return (Rectangle)rdict["ConnectNodeIcon"];
+            return new ConnectNode(this);
         }
 
         protected override XElement[] ToXml()
         {
             return base.ToXml();
         }
-
-        public ConnectNode() : this(DateTime.Now)
-        { }
-
-        public ConnectNode(DateTime _creationTime, string _name = "") : base(_creationTime, _name)
-        { }
     }
 }

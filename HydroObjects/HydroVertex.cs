@@ -11,7 +11,10 @@ namespace HydroSystemModelPreProcess.HydroObjects
 {
     public abstract class HydroVertex : HydroObject
     {
-        public HydroVertex(DateTime _creationTime, string _name) : base(_creationTime, _name)
+        public HydroVertex()
+        { }
+
+        public HydroVertex(HydroVertex other) : base(other)
         { }
     } 
 }

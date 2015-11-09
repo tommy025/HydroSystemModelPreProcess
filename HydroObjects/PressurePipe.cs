@@ -12,14 +12,17 @@ namespace HydroSystemModelPreProcess.HydroObjects
 {
     public class PressurePipe : HydroEdge
     {
-        public static Line GetVisualElement()
+        public PressurePipe()
+        { }
+
+        public PressurePipe(PressurePipe other) : base(other)
         {
-            return (Line)rdict["PressurePipe"];  
+            roughness = other.Roughness;
         }
 
-        public static FrameworkElement GetPropertySettingControl()
+        public override HydroObject DeepClone()
         {
-            return rdict["PressurePipePropertyControl"] as FrameworkElement;
+            return new PressurePipe(this);
         }
 
         protected override XElement[] ToXml()
@@ -29,12 +32,6 @@ namespace HydroSystemModelPreProcess.HydroObjects
                 new XElement("Roughness", Roughness)
             };
         }
-
-        public PressurePipe() : this(DateTime.Now)
-        { }
-
-        public PressurePipe(DateTime _creationTime, string _name = "") : base(_creationTime, _name)
-        { }
 
         private double roughness;
 

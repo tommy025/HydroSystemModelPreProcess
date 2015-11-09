@@ -96,9 +96,9 @@
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="auto"></ColumnDefinition>
-                <ColumnDefinition Width="2*"></ColumnDefinition>
+                <ColumnDefinition Width="4*"></ColumnDefinition>
                 <ColumnDefinition Width="auto"></ColumnDefinition>
-                <ColumnDefinition MinWidth="200"></ColumnDefinition>
+                <ColumnDefinition Width="3*" MinWidth="200"></ColumnDefinition>
             </Grid.ColumnDefinitions>
 
             <ToolBarTray Grid.Column="0" Orientation="Vertical">
@@ -117,7 +117,44 @@
 
             <GridSplitter Grid.Column="2" Width="3" VerticalAlignment="Stretch" HorizontalAlignment="Center"></GridSplitter>
 
-            <DockPanel Name="dkpProperties" Grid.Column="3"></DockPanel>
+            <Grid Grid.Column="3">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"></RowDefinition>
+                    <RowDefinition Height="auto"></RowDefinition>
+                    <RowDefinition Height="2*"></RowDefinition>
+                </Grid.RowDefinitions>
+                
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*"></ColumnDefinition>
+                        <ColumnDefinition Width="*"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+
+                    <ListBox Name="lbxProcedures" Grid.Column="0"></ListBox>
+
+                    <StackPanel Grid.Column="1" Orientation="Vertical">
+                        <Button>新建工况</Button>
+                        <Button>复制工况</Button>
+                        <Button>删除工况</Button>
+                    </StackPanel>
+                </Grid>
+
+                <GridSplitter Grid.Row="1" Height="3" VerticalAlignment="Center" HorizontalAlignment="Stretch"></GridSplitter>
+
+                <Grid Grid.Row="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"></ColumnDefinition>
+                        <ColumnDefinition Width="auto"></ColumnDefinition>
+                        <ColumnDefinition Width="2*"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+
+                    <ListBox Grid.Column="0"></ListBox>
+
+                    <GridSplitter Grid.Column="1" Width="3" VerticalAlignment="Stretch" HorizontalAlignment="Center"></GridSplitter>
+
+                    <DockPanel Grid.Column="2" Name="dkpProperties"></DockPanel>
+                </Grid>
+            </Grid>
         </Grid>    
     </Grid>
 </Window>
