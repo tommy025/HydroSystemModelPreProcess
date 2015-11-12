@@ -182,7 +182,7 @@ namespace HydroSystemModelPreProcess
 
         public void RemoveHydroElement(FrameworkElement element)
         {
-            HydroDocument.Remove(element);
+            HydroDocument.RemoveHydroObject(element);
             UnregisterHydroElement(element);
         }
 

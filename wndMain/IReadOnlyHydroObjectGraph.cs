@@ -1,38 +1,33 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Shapes;
 
 namespace HydroSystemModelPreProcess
 {
-    public interface IReadOnlyHydroObjectGraph : IEnumerable<Shape>, INotifyCollectionChanged
+    public interface IReadOnlyHydroObjectGraph : IEnumerable<IHydroObjectInfo>, INotifyCollectionChanged
     {
-        bool Contains(Shape item);
+        bool Contains(IHydroObjectInfo item);
 
         int Count
         { get; }
 
-        Rectangle GetVertex1(Line edge);
+        IHydroVertexInfo GetVertex1(IHydroEdgeInfo edge);
 
-        Rectangle GetVertex2(Line edge);
+        IHydroVertexInfo GetVertex2(IHydroEdgeInfo edge);
 
-        bool IsConnected(Rectangle vertex1, Rectangle vertex2);
+        bool IsConnected(IHydroVertexInfo vertex1, IHydroVertexInfo vertex2);
 
-        bool IsConnectedTo(Line edge, Rectangle vertex);
+        bool IsConnectedTo(IHydroEdgeInfo edge, IHydroVertexInfo vertex);
 
-        bool IsBetween(Line edge, Rectangle vertex1, Rectangle vertex2);
+        bool IsBetween(IHydroEdgeInfo edge, IHydroVertexInfo vertex1, IHydroVertexInfo vertex2);
 
-        Rectangle[] GetAllVertexs();
+        IHydroVertexInfo[] GetAllVertexs();
 
-        Rectangle[] GetVertexs(Line edge);
+        IHydroVertexInfo[] GetVertexs(IHydroEdgeInfo edge);
 
-        Line[] GetAllEdges();
+        IHydroEdgeInfo[] GetAllEdges();
 
-        Line[] GetEdges(Rectangle vertex);
+        IHydroEdgeInfo[] GetEdges(IHydroVertexInfo vertex);
 
-        Line[] GetEdges(Rectangle vertex1, Rectangle vertex2);
+        IHydroEdgeInfo[] GetEdges(IHydroVertexInfo vertex1, IHydroVertexInfo vertex2);
     }
 }

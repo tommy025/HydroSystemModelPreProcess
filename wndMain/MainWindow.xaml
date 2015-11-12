@@ -100,7 +100,8 @@
             </ToolBarTray>
 
             <Canvas x:Name="drawingCanvas" Grid.Column="1"
-                    Background="White" ClipToBounds="True"/>
+                    Background="White" ClipToBounds="True">
+            </Canvas>
         </Grid>    
     </Grid>
 </Window>

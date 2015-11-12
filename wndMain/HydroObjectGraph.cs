@@ -13,331 +13,182 @@ using System.Xml.Serialization;
 
 namespace HydroSystemModelPreProcess
 {
-    public class HydroObjectGraph : IReadOnlyHydroObjectGraph
+    public class HydroObjectGraph : IHydroObjectGraph
     {
+        #region Constructors
+
         public HydroObjectGraph()
         {
-            hydroElements = new ObservableCollection<Shape>();
-            hydroEdges = new Dictionary<Line, HydroEdgeInfo>();
+            hydroObjects = new ObservableCollection<IHydroObjectInfo>();
         }
 
-        public void AddVertex(Rectangle vertex, Type type)
-        {           
-            vertex.DataContext = new HydroObjectInfo(vertex, type);
-            hydroElements.Add(vertex);
-        }
+        #endregion
 
-        public void AddEdge(Line edge, Type type)
-        {         
-            edge.DataContext = new HydroObjectInfo(edge, type);
-            hydroElements.Add(edge);
-            hydroEdges.Add(edge, new HydroEdgeInfo());
-        }
+        #region Fields
 
-        public void Clear()
+        protected ObservableCollection<IHydroObjectInfo> hydroObjects;
+
+        #endregion
+
+        #region IHydroObjectGraph
+
+        public bool Contains(IHydroObjectInfo item)
         {
-            hydroEdges.Clear();
-            hydroElements.Clear();
-        }
-
-        public bool Contains(Shape item)
-        {
-            return hydroElements.Contains(item);
-        }
-
-        public bool Remove(Shape item)
-        {
-            if (item is Line)
-                hydroEdges.Remove(item as Line);
-
-            return hydroElements.Remove(item);
+            return hydroObjects.Contains(item);
         }
 
         public int Count
         {
             get
             {
-                return hydroElements.Count;
+                return hydroObjects.Count;
             }
         }
 
-        private ObservableCollection<Shape> hydroElements;
+        public IEnumerator<IHydroObjectInfo> GetEnumerator()
+        {
+            return hydroObjects.GetEnumerator();
+        }
 
-        private Dictionary<Line, HydroEdgeInfo> hydroEdges;
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return hydroObjects.GetEnumerator();
+        }
 
         public event NotifyCollectionChangedEventHandler CollectionChanged
         {
-            add { hydroElements.CollectionChanged += value; }
-            remove { hydroElements.CollectionChanged -= value; }
+            add { hydroObjects.CollectionChanged += value; }
+            remove { hydroObjects.CollectionChanged -= value; }
         }
 
-        public void SetVertex1(Line edge, Rectangle vertex)
+        public IHydroVertexInfo GetVertex1(IHydroEdgeInfo edge)
+        {
+            return edge.Vertex1;
+        }
+
+        public IHydroVertexInfo GetVertex2(IHydroEdgeInfo edge)
+        {
+            return edge.Vertex2;
+        }
+        
+        public bool IsConnected(IHydroVertexInfo vertex1, IHydroVertexInfo vertex2)
+        {
+            return GetEdges(vertex1, vertex2).Length != 0;
+        }
+
+        public bool IsConnectedTo(IHydroEdgeInfo edge, IHydroVertexInfo vertex)
+        {
+            return edge.IsConnectedTo(vertex);
+        }
+
+        public bool IsBetween(IHydroEdgeInfo edge, IHydroVertexInfo vertex1, IHydroVertexInfo vertex2)
+        {
+            return edge.IsBetween(vertex1, vertex2);
+        }   
+
+        public IHydroVertexInfo[] GetAllVertexs()
+        {
+            return (from o in hydroObjects
+                    where o is IHydroVertexInfo
+                    select o as IHydroVertexInfo).ToArray();
+        }
+
+        public IHydroVertexInfo[] GetVertexs(IHydroEdgeInfo edge)
+        {
+            return edge.GetVertexs();
+        }
+
+        public IHydroEdgeInfo[] GetAllEdges()
+        {
+            return (from o in hydroObjects
+                    where o is IHydroEdgeInfo
+                    select o as IHydroEdgeInfo).ToArray();
+        }
+
+        public IHydroEdgeInfo[] GetEdges(IHydroVertexInfo vertex)
+        {
+            return (from o in hydroObjects
+                    where o is IHydroEdgeInfo && (o as IHydroEdgeInfo).IsConnectedTo(vertex)
+                    select o as IHydroEdgeInfo).ToArray();
+        }
+
+        public IHydroEdgeInfo[] GetEdges(IHydroVertexInfo vertex1, IHydroVertexInfo vertex2)
+        {
+            return (from o in hydroObjects
+                    where o is IHydroEdgeInfo && (o as IHydroEdgeInfo).IsBetween(vertex1, vertex2)
+                    select o as IHydroEdgeInfo).ToArray();
+        }     
+
+        public void AddVertex(IHydroVertexInfo vertex)
+        {
+            hydroObjects.Add(vertex);
+        }
+
+        public void AddEdge(IHydroEdgeInfo edge)
+        {
+            hydroObjects.Add(edge);
+        }
+
+        public void Clear()
+        {
+            hydroObjects.Clear();
+        }
+
+        public bool Remove(IHydroObjectInfo item)
+        {
+            return hydroObjects.Remove(item);
+        }
+
+        public void SetVertex1(IHydroEdgeInfo edge, IHydroVertexInfo vertex)
         {
             if (edge == null)
                 throw new ArgumentNullException("HydroEdge reference should not be null!");
 
-            if (!hydroElements.Contains(edge))
+            if (!hydroObjects.Contains(edge))
                 throw new ArgumentException("Given HydroEdge not contained in HydroObjectGraph!");
 
-            if (vertex != null && !hydroElements.Contains(vertex))
+            if (vertex != null && !hydroObjects.Contains(vertex))
                 throw new ArgumentException("Given HydroVertex not contained in HydroObjectGraph!");
 
-            hydroEdges[edge].Vertex1 = vertex;
+            edge.Vertex1 = vertex;
         }
 
-        public void SetVertex2(Line edge, Rectangle vertex)
+        public void SetVertex2(IHydroEdgeInfo edge, IHydroVertexInfo vertex)
         {
             if (edge == null)
                 throw new ArgumentNullException("HydroEdge reference should not be null!");
 
-            if (!hydroElements.Contains(edge))
+            if (!hydroObjects.Contains(edge))
                 throw new ArgumentException("Given HydroEdge not contained in HydroObjectGraph!");
 
-            if (vertex != null && !hydroElements.Contains(vertex))
+            if (vertex != null && !hydroObjects.Contains(vertex))
                 throw new ArgumentException("Given HydroVertex not contained in HydroObjectGraph!");
 
-            hydroEdges[edge].Vertex2 = vertex;
+            edge.Vertex2 = vertex;
         }
 
-        public Rectangle GetVertex1(Line edge)
-        {
-            return hydroEdges[edge].Vertex1;
-        }
-
-        public Rectangle GetVertex2(Line edge)
-        {
-            return hydroEdges[edge].Vertex2;
-        }
-
-        public void ConnectVertexs(Line edge, Rectangle vertex1, Rectangle vertex2)
+        public void ConnectVertexs(IHydroEdgeInfo edge, IHydroVertexInfo vertex1, IHydroVertexInfo vertex2)
         {
             SetVertex1(edge, vertex1);
             SetVertex2(edge, vertex2);
         }
 
-        public bool IsConnected(Rectangle vertex1, Rectangle vertex2)
-        {
-            var result = (from e in hydroEdges.Values
-                          where e.IsBetween(vertex1, vertex2)
-                          select e).ToArray();
-
-            return result.Length != 0;
-        }
-
-        public bool IsConnectedTo(Line edge, Rectangle vertex)
-        {
-            return hydroEdges[edge].IsConnectedTo(vertex);
-        }
-
-        public bool IsBetween(Line edge, Rectangle vertex1, Rectangle vertex2)
-        {
-            return hydroEdges[edge].IsBetween(vertex1, vertex2);
-        }
-
-        public void DisConnectVertexs(Line edge)
+        public void DisConnectVertexs(IHydroEdgeInfo edge)
         {
             SetVertex1(edge, null);
             SetVertex2(edge, null);
         }
 
-        public void DisConnectVertexs(Rectangle vertex1, Rectangle vertex2)
+        public void DisConnectVertexs(IHydroVertexInfo vertex1, IHydroVertexInfo vertex2)
         {
-            var edges = from e in hydroEdges
-                        where e.Value.IsBetween(vertex1, vertex2)
-                        select e.Key;
+            var edges = from o in hydroObjects
+                        where o is IHydroEdgeInfo && (o as IHydroEdgeInfo).IsBetween(vertex1, vertex2)
+                        select o as IHydroEdgeInfo;
 
             foreach (var e in edges)
                 DisConnectVertexs(e);
         }
 
-        public Rectangle[] GetAllVertexs()
-        {
-            return (from v in hydroElements
-                    where v is Rectangle
-                    select v as Rectangle).ToArray();
-        }
-
-        public Rectangle[] GetVertexs(Line edge)
-        {
-            return hydroEdges[edge].GetVertexs();
-        }
-
-        public Line[] GetAllEdges()
-        {
-            return hydroEdges.Keys.ToArray();
-        }
-
-        public Line[] GetEdges(Rectangle vertex)
-        {
-            return (from kvp in hydroEdges
-                    where kvp.Value.IsConnectedTo(vertex)
-                    select kvp.Key).ToArray();
-        }
-
-        public Line[] GetEdges(Rectangle vertex1, Rectangle vertex2)
-        {
-            return (from kvp in hydroEdges
-                    where kvp.Value.IsBetween(vertex1, vertex2)
-                    select kvp.Key).ToArray();
-        }
-
-        public IEnumerator<Shape> GetEnumerator()
-        {
-            return hydroElements.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return hydroElements.GetEnumerator();
-        }
-
-        //public void LoadFromXmlFile(XElement xroot)
-        //{
-        //    var xHydroObjects = xroot.Element("HydroObjects");
-        //    var xHydroEdgeInfos = xroot.Element("HydroEdgeInfos");
-        //    foreach (var xHydroObject in xHydroObjects.Elements())
-        //    {
-        //        Add(HydroObject.XmlDeserialize(xHydroObject));
-        //    }
-
-        //    foreach(var xHydroEdgeInfo in xHydroEdgeInfos.Elements())
-        //    {
-        //        var associatedEdgeName = xHydroEdgeInfo.Attribute("HydroEdgeFullName").Value;
-        //        var hydroEdge = hydroElements.Single(hydroObject => { return hydroObject.FullName == associatedEdgeName; }) as HydroEdge;
-        //        var associatedVertexName1 = xHydroEdgeInfo.Element("Vertex1").Value;
-        //        var hydroVertex1 = hydroElements.SingleOrDefault(hydroObject => { return hydroObject.FullName == associatedVertexName1; }) as HydroVertex;
-        //        SetVertex1(hydroEdge, hydroVertex1);
-        //        var associatedVertexName2 = xHydroEdgeInfo.Element("Vertex2").Value;
-        //        var hydroVertex2 = hydroElements.SingleOrDefault(hydroObject => { return hydroObject.FullName == associatedVertexName2; }) as HydroVertex;
-        //        SetVertex2(hydroEdge, hydroVertex2);
-        //    }
-        //}
-
-        //public XElement[] SaveToXmlFile()
-        //{
-        //    return new XElement[] {
-        //        new XElement("HydroObjects",
-        //            (from o in hydroElements
-        //             select o.XmlSerialize()).ToArray()),
-        //        new XElement("HydroEdgeInfos",
-        //            (from kvp in hydroEdges
-        //             select kvp.Value.XmlSerialize(kvp.Key.FullName)).ToArray())};
-        //}
-
-        private class HydroObjectInfo : IHydroObjectInfo
-        {
-            public HydroObjectInfo(Shape element, Type type)
-            {
-                Element = element;
-                HydroObjectType = type;
-            }
-
-            public Shape Element
-            { get; set; }
-
-            public string Name
-            { get; set; } = "<新建对象>";
-
-            public string FullName
-            {
-                get { return Element.Name + "_" + Name; }
-            }
-
-            public Type HydroObjectType
-            { get; set; }
-
-            public string HydroObjectTypeName
-            {
-                get { return HydroObjectType.Name; }              
-            }
-
-            public FrameworkElement PropertySettingControl
-            {
-                get { return HydroResourceHelper.GetHydroObjectPropertySettingControl(HydroObjectType); }
-            }
-        }
-
-        private class HydroEdgeInfo
-        {
-            private Rectangle vertex1;
-
-            public Rectangle Vertex1
-            {
-                get { return vertex1; }
-                set
-                {
-                    if (vertex2 == value && value != null)
-                        throw new ArgumentException("Vertexs of HydroEdgeInfo must be different!");
-
-                    vertex1 = value;
-                }
-            }
-
-            private Rectangle vertex2;
-
-            public Rectangle Vertex2
-            {
-                get { return vertex2; }
-                set
-                {
-                    if (vertex1 == value && value != null)
-                        throw new ArgumentException("Vertexs of HydroEdgeInfo must be different!");
-
-                    vertex2 = value;
-                }
-            }
-
-            public Rectangle[] GetVertexs()
-            {
-                return new Rectangle[] { Vertex1, Vertex2 };
-            }
-
-            public bool IsBetween(Rectangle v1, Rectangle v2)
-            {
-                if (v1 == null || v2 == null)
-                    return false;
-
-                if (Vertex1 == v1 && Vertex2 == v2 || Vertex2 == v1 && Vertex1 == v2)
-                    return true;
-                else
-                    return false;
-            }
-
-            public bool IsConnectedTo(Rectangle vertex)
-            {
-                if (vertex == Vertex1 || vertex == Vertex2)
-                    return true;
-                else
-                    return false;
-            }
-
-            //public XElement XmlSerialize(string hObjectFullName)
-            //{
-            //    return new XElement(GetType().Name, new XAttribute("HydroEdgeFullName", hObjectFullName),
-            //        new XElement("Vertex1", Vertex1 != null ? Vertex1.Name : "null"),
-            //        new XElement("Vertex2", Vertex2 != null ? Vertex2.Name : "null"));
-            //}
-        }
-    } 
-
-    public interface IHydroObjectInfo
-    {
-        Shape Element
-        { get; }
-
-        string Name
-        { get; }
-
-        string FullName
-        { get; }
-
-        Type HydroObjectType
-        { get; }
-
-        string HydroObjectTypeName
-        { get; }
-
-        FrameworkElement PropertySettingControl
-        { get; }     
+        #endregion
     }
 }

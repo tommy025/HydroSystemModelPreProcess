@@ -72,9 +72,18 @@
     </Compile>
     <Compile Include="HeadLossCalculation.cs" />
     <Compile Include="HydroDocument.cs" />
+    <Compile Include="HydroEdgeInfo.cs" />
     <Compile Include="HydroObjectGraph.cs" />
+    <Compile Include="HydroObjectInfo.cs" />
     <Compile Include="HydroProcedure.cs" />
     <Compile Include="HydroResourceHelper.cs" />
+    <Compile Include="HydroVertexInfo.cs" />
+    <Compile Include="ICustomizedClone.cs" />
+    <Compile Include="IHydroEdgeInfo.cs" />
+    <Compile Include="IHydroObjectGraph.cs" />
+    <Compile Include="IHydroObjectInfo.cs" />
+    <Compile Include="IHydroProcedure.cs" />
+    <Compile Include="IHydroVertexInfo.cs" />
     <Compile Include="IReadOnlyHydroObjectGraph.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>

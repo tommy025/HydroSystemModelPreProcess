@@ -14,9 +14,22 @@ namespace HydroSystemModelPreProcess
         public HeadLossCalculation(IReadOnlyHydroObjectGraph _hydroObjectGraph) :base(_hydroObjectGraph)
         { }
 
-        public override HydroProcedure DeepClone()
+        public override IHydroProcedure CustomizedClone()
         {
             return new HeadLossCalculation(this);
+        }
+
+        public override object CalculationResult
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            protected set
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }

@@ -23,96 +23,87 @@ using System.Collections;
 
 namespace HydroSystemModelPreProcess
 {
-    public class HydroDocument : IEnumerable<HydroProcedure>, INotifyCollectionChanged
+    public class HydroDocument : IEnumerable<IHydroProcedure>, INotifyCollectionChanged
     {
-        //public static HydroDocument Load(Stream stream)
-        //{
-        //    var doc = new HydroDocument();
-        //    var xdoc = XDocument.Load(stream);
-        //    var version = xdoc.Root.Attribute("Version").Value;
-        //    if (version != "1.0.0.0")
-        //        throw new FileFormatException("Unsupported file version!");
-
-        //    var xroot = xdoc.Element("HydroObjectFile");
-        //    doc.hydroObjectGraph.LoadFromXmlFile(xroot);
-        //    foreach (var xelement in xroot.Element("ElementInfo").Elements("FrameworkElement"))
-        //    {
-        //        doc.XmlDeserializeElement(xelement);
-        //    }
-
-        //    return doc;
-        //}
+        #region Constructors
 
         public HydroDocument()
         {
             hydroObjectGraph = new HydroObjectGraph();
-            hydroProcedureList = new ObservableCollection<HydroProcedure>();
+            hydroObjectInfoList = new List<IHydroObjectInfo>();
+            hydroProcedureList = new ObservableCollection<IHydroProcedure>();
         }
 
-        public IReadOnlyHydroObjectGraph HydroObjectGraph
+        #endregion
+
+        #region Fields
+
+        protected IHydroObjectGraph hydroObjectGraph;
+
+        protected List<IHydroObjectInfo> hydroObjectInfoList;
+
+        protected ObservableCollection<IHydroProcedure> hydroProcedureList;
+
+        #endregion
+
+        #region Methods
+
+        public IHydroProcedure AddHeadLossCalculation()
         {
-            get { return hydroObjectGraph; }
-        }
-
-        protected HydroObjectGraph hydroObjectGraph;
-
-        protected ObservableCollection<HydroProcedure> hydroProcedureList;
-
-        public HydroProcedure AddHeadLossCalculation()
-        {
-            var procedure = new HeadLossCalculation(HydroObjectGraph);
+            var procedure = new HeadLossCalculation(hydroObjectGraph);
             hydroProcedureList.Add(procedure);
             return procedure;
         }
 
-        public HydroProcedure DuplicatedProcedure(HydroProcedure procedure)
+        public IHydroProcedure DuplicatedProcedure(IHydroProcedure procedure)
         {
-            var dupProcedure = procedure.DeepClone();
+            var dupProcedure = procedure.CustomizedClone();
             hydroProcedureList.Add(dupProcedure);
             return dupProcedure;
         }
 
-        public bool RemoveProcedure(HydroProcedure procedure)
+        public bool RemoveProcedure(IHydroProcedure procedure)
         {
             return hydroProcedureList.Remove(procedure);
-        }
-
-        public event NotifyCollectionChangedEventHandler CollectionChanged
-        {
-            add { hydroProcedureList.CollectionChanged += value; }
-            remove { hydroProcedureList.CollectionChanged -= value; }
-        }
-
-        public FrameworkElement[] GetElements()
-        {
-            return hydroObjectGraph.ToArray();
         }
 
         public Rectangle AddConnectNode(Point position)
         {
             var cNode = HydroResourceHelper.CreateVisualElement(typeof(ConnectNode)) as Rectangle;
-            hydroObjectGraph.AddVertex(cNode, typeof(ConnectNode));
-            MoveVertex(cNode, position - new Vector(cNode.Width / 2, cNode.Height / 2));
+            var cNodeInfo = new HydroVertexInfo(cNode, typeof(ConnectNode));
+            hydroObjectGraph.AddVertex(cNodeInfo);
+            hydroObjectInfoList.Add(cNodeInfo);
+            MoveVertex(cNode, position);
             return cNode;
         }
 
         public Line AddPressurePipe()
         {
             var pPipe = HydroResourceHelper.CreateVisualElement(typeof(PressurePipe)) as Line;
-            hydroObjectGraph.AddEdge(pPipe, typeof(PressurePipe));
+            var pPipeInfo = new HydroEdgeInfo(pPipe, typeof(PressurePipe));
+            hydroObjectGraph.AddEdge(pPipeInfo);
+            hydroObjectInfoList.Add(pPipeInfo);
             Canvas.SetZIndex(pPipe, -1);
             return pPipe;
         }
 
+        public bool RemoveHydroObject(FrameworkElement element)
+        {
+            var hydroObjectInfo = hydroObjectInfoList.Single(i => i.Element == element);
+            hydroObjectGraph.Remove(hydroObjectInfo);
+            return hydroObjectInfoList.Remove(hydroObjectInfo);
+        }
+
         public void MoveVertex(Rectangle vertex, Point position)
         {
-            Canvas.SetLeft(vertex, position.X);
-            Canvas.SetTop(vertex, position.Y);
+            Canvas.SetLeft(vertex, position.X - vertex.Width / 2);
+            Canvas.SetTop(vertex, position.Y - vertex.Height / 2);
 
-            var connectEdges = hydroObjectGraph.GetEdges(vertex);
+            var vertexInfo = hydroObjectInfoList.Single(i => i.Element == vertex) as IHydroVertexInfo;
+            var connectEdges = hydroObjectGraph.GetEdges(vertexInfo);
             foreach (var edge in connectEdges)
             {
-                if (hydroObjectGraph.GetVertex1(edge) == vertex)
+                if (hydroObjectGraph.GetVertex1(edge) == vertexInfo)
                 {
                     edge.X1 = position.X + vertex.Width / 2;
                     edge.Y1 = position.Y + vertex.Height / 2;
@@ -184,18 +175,11 @@ namespace HydroSystemModelPreProcess
             return true;
         }
 
-        public FrameworkElement GetPropertySettingControl(FrameworkElement element)
-        {
-            var hydroObjectInfo = element.DataContext as IHydroObjectInfo;
-            return HydroResourceHelper.GetHydroObjectPropertySettingControl(hydroObjectInfo.HydroObjectType);
-        }
+        #endregion
 
-        public bool Remove(FrameworkElement element)
-        {
-            return hydroObjectGraph.Remove(element as Shape);
-        }
+        #region IEnumerable<IHydroProcedure>
 
-        public IEnumerator<HydroProcedure> GetEnumerator()
+        public IEnumerator<IHydroProcedure> GetEnumerator()
         {
             return hydroProcedureList.GetEnumerator();
         }
@@ -205,67 +189,16 @@ namespace HydroSystemModelPreProcess
             return hydroProcedureList.GetEnumerator();
         }
 
-        //public void Save(Stream stream)
-        //{
-        //    var xdoc = new XDocument();
-        //    xdoc.Add(new XElement("HydroObjectFile", new XAttribute("Version", "1.0.0.0"),
-        //        hydroObjectGraph.SaveToXmlFile(),
-        //        new XElement("ElementInfo",
-        //            (from e in elementDictionary.Keys
-        //             select XmlSerializeElement(e)).ToArray())));
+        #endregion
 
-        //    xdoc.Save(stream);
-        //}
+        #region INotifyCollectionChanged
 
-        //private XElement XmlSerializeElement(FrameworkElement element)
-        //{
-        //    var hObject = elementDictionary[element];
-        //    if (element is Rectangle)
-        //    {
-        //        return new XElement("FrameworkElement",
-        //            new XAttribute("ElementType", element.GetType().Name),
-        //            new XAttribute("HydroObjectFullName", hObject.FullName),
-        //            new XElement("Left", Canvas.GetLeft(element) + element.Width / 2),
-        //            new XElement("Top", Canvas.GetTop(element) + element.Height / 2));
-        //    }
-        //    else if (element is Line)
-        //    {
-        //        var line = element as Line;
-        //        return new XElement("FrameworkElement",
-        //            new XAttribute("ElementType", element.GetType().Name),
-        //            new XAttribute("HydroObjectFullName", hObject.FullName),
-        //            new XElement("X1", line.X1),
-        //            new XElement("Y1", line.Y1),
-        //            new XElement("X2", line.X2),
-        //            new XElement("Y2", line.Y2));
-        //    }
-        //    else
-        //        throw new ArgumentException("Unsupported type " + element.GetType().FullName + " when serializing!");
-        //}
+        public event NotifyCollectionChangedEventHandler CollectionChanged
+        {
+            add { hydroProcedureList.CollectionChanged += value; }
+            remove { hydroProcedureList.CollectionChanged -= value; }
+        }
 
-        //private void XmlDeserializeElement(XElement xelement)
-        //{
-        //    var fullName = xelement.Attribute("HydroObjectFullName").Value;
-        //    switch (xelement.Attribute("ElementType").Value)
-        //    {
-        //        case "Line":
-        //            var pPipe = hydroObjectGraph.GetObject(fullName) as PressurePipe;
-        //            var element = RegisterPressurePipe(Visibility.Hidden, pPipe);
-        //            SetPipeFirstPoint(element,
-        //                new Point(double.Parse(xelement.Element("X1").Value), double.Parse(xelement.Element("Y1").Value)));
-
-        //            SetPipeSecondPoint(element,
-        //                new Point(double.Parse(xelement.Element("X2").Value), double.Parse(xelement.Element("Y2").Value)));
-        //            element.Visibility = Visibility.Visible;
-
-        //            return;
-        //        case "Rectangle":
-        //            var cNode = hydroObjectGraph.GetObject(fullName) as ConnectNode;
-        //            RegisterConnectNode(new Point(double.Parse(xelement.Element("Left").Value), double.Parse(xelement.Element("Top").Value)),
-        //                cNode);
-
-        //            return;
-        //    }
-        //}
+        #endregion
     }
 }
