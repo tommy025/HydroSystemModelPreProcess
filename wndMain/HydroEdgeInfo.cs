@@ -5,10 +5,23 @@ namespace HydroSystemModelPreProcess
 {
     public class HydroEdgeInfo : HydroObjectInfo, IHydroEdgeInfo
     {
+        #region StaticMethods
+
+        public static HydroEdgeInfo CreateHydroEdgeInfo(Line edge, Type hydroObjectType)
+        {
+            var info = new HydroEdgeInfo(edge, hydroObjectType);
+            edge.DataContext = info;
+            return info;
+        }
+
+        #endregion
+
         #region Constructors
 
-        public HydroEdgeInfo(Shape _element, Type _hydroObjectType) : base(_element, _hydroObjectType)
-        { }
+        protected HydroEdgeInfo(Line _edge, Type _hydroObjectType) : base(_hydroObjectType)
+        {
+            edge = _edge;
+        }
 
         #endregion
 
@@ -22,9 +35,11 @@ namespace HydroSystemModelPreProcess
 
         private double y2;
 
+        private readonly Line edge;
+
         #endregion
 
-        #region IHydroEdgeInfo
+        #region Properties
 
         public double X1
         {
@@ -66,60 +81,20 @@ namespace HydroSystemModelPreProcess
             }
         }
 
-        private IHydroVertexInfo vertex1;   
-
-        public IHydroVertexInfo Vertex1
+        public override Shape Element
         {
-            get { return vertex1; }
-            set
-            {
-                if (vertex2 == value && value != null)
-                    throw new ArgumentException("Vertexs of HydroEdgeInfo must be different!");
-
-                vertex1 = value;
-                TriggerPropertyChanged(nameof(Vertex1));
-            }
+            get { return edge; }
         }
 
-        private IHydroVertexInfo vertex2;
+        #endregion
 
-        public IHydroVertexInfo Vertex2
+        #region IHydroEdgeInfo
+
+        public Line Edge
         {
-            get { return vertex2; }
-            set
-            {
-                if (vertex1 == value && value != null)
-                    throw new ArgumentException("Vertexs of HydroEdgeInfo must be different!");
-
-                vertex2 = value;
-                TriggerPropertyChanged(nameof(Vertex2));
-            }
+            get { return edge; }
         }
 
-        public IHydroVertexInfo[] GetVertexs()
-        {
-            return new IHydroVertexInfo[] { Vertex1, Vertex2 };
-        }
-
-        public bool IsBetween(IHydroVertexInfo v1, IHydroVertexInfo v2)
-        {
-            if (v1 == null || v2 == null)
-                return false;
-
-            if (Vertex1 == v1 && Vertex2 == v2 || Vertex2 == v1 && Vertex1 == v2)
-                return true;
-            else
-                return false;
-        }
-
-        public bool IsConnectedTo(IHydroVertexInfo vertex)
-        {
-            if (vertex == Vertex1 || vertex == Vertex2)
-                return true;
-            else
-                return false;
-        }    
-
-        #endregion      
+        #endregion
     }
 }

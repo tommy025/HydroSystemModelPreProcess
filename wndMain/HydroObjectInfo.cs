@@ -9,12 +9,9 @@ namespace HydroSystemModelPreProcess
     {
         #region Constructors
 
-        public HydroObjectInfo(Shape _element, Type _hydroObjectType)
+        protected HydroObjectInfo(Type _hydroObjectType)
         {
-            Element = _element;
             HydroObjectType = _hydroObjectType;
-
-            Element.DataContext = this;
         }
 
         #endregion
@@ -60,7 +57,7 @@ namespace HydroSystemModelPreProcess
 
         #region IHydroObjectInfo
 
-        public Shape Element
+        public abstract Shape Element
         { get; }
 
         public Type HydroObjectType

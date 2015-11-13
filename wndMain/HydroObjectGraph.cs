@@ -4,12 +4,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Windows;
-using System.Windows.Shapes;
-using System.Xml;
-using System.Xml.Linq;
-using System.Xml.Schema;
-using System.Xml.Serialization;
 
 namespace HydroSystemModelPreProcess
 {
@@ -20,6 +14,7 @@ namespace HydroSystemModelPreProcess
         public HydroObjectGraph()
         {
             hydroObjects = new ObservableCollection<IHydroObjectInfo>();
+            hydroObjectGraphEdgeInfo = new Dictionary<IHydroEdgeInfo, HydroObjectGraphEdgeInfo>();
         }
 
         #endregion
@@ -27,6 +22,8 @@ namespace HydroSystemModelPreProcess
         #region Fields
 
         protected ObservableCollection<IHydroObjectInfo> hydroObjects;
+
+        protected Dictionary<IHydroEdgeInfo, HydroObjectGraphEdgeInfo> hydroObjectGraphEdgeInfo;
 
         #endregion
 
@@ -63,12 +60,12 @@ namespace HydroSystemModelPreProcess
 
         public IHydroVertexInfo GetVertex1(IHydroEdgeInfo edge)
         {
-            return edge.Vertex1;
+            return hydroObjectGraphEdgeInfo[edge].Vertex1;
         }
 
         public IHydroVertexInfo GetVertex2(IHydroEdgeInfo edge)
         {
-            return edge.Vertex2;
+            return hydroObjectGraphEdgeInfo[edge].Vertex2;
         }
         
         public bool IsConnected(IHydroVertexInfo vertex1, IHydroVertexInfo vertex2)
@@ -78,64 +75,71 @@ namespace HydroSystemModelPreProcess
 
         public bool IsConnectedTo(IHydroEdgeInfo edge, IHydroVertexInfo vertex)
         {
-            return edge.IsConnectedTo(vertex);
+            return hydroObjectGraphEdgeInfo[edge].IsConnectedTo(vertex);
         }
 
         public bool IsBetween(IHydroEdgeInfo edge, IHydroVertexInfo vertex1, IHydroVertexInfo vertex2)
         {
-            return edge.IsBetween(vertex1, vertex2);
+            return hydroObjectGraphEdgeInfo[edge].IsBetween(vertex1, vertex2);
         }   
 
         public IHydroVertexInfo[] GetAllVertexs()
         {
-            return (from o in hydroObjects
-                    where o is IHydroVertexInfo
-                    select o as IHydroVertexInfo).ToArray();
+            return hydroObjects.Except(hydroObjectGraphEdgeInfo.Keys).Select(o => o as IHydroVertexInfo).ToArray();
         }
 
         public IHydroVertexInfo[] GetVertexs(IHydroEdgeInfo edge)
         {
-            return edge.GetVertexs();
+            return hydroObjectGraphEdgeInfo[edge].GetVertexs();
         }
 
         public IHydroEdgeInfo[] GetAllEdges()
         {
-            return (from o in hydroObjects
-                    where o is IHydroEdgeInfo
-                    select o as IHydroEdgeInfo).ToArray();
+            return hydroObjectGraphEdgeInfo.Keys.ToArray();
         }
 
         public IHydroEdgeInfo[] GetEdges(IHydroVertexInfo vertex)
         {
-            return (from o in hydroObjects
-                    where o is IHydroEdgeInfo && (o as IHydroEdgeInfo).IsConnectedTo(vertex)
-                    select o as IHydroEdgeInfo).ToArray();
+            return (from kvp in hydroObjectGraphEdgeInfo
+                    where kvp.Value.IsConnectedTo(vertex)
+                    select kvp.Key).ToArray();
         }
 
         public IHydroEdgeInfo[] GetEdges(IHydroVertexInfo vertex1, IHydroVertexInfo vertex2)
         {
-            return (from o in hydroObjects
-                    where o is IHydroEdgeInfo && (o as IHydroEdgeInfo).IsBetween(vertex1, vertex2)
-                    select o as IHydroEdgeInfo).ToArray();
+            return (from kvp in hydroObjectGraphEdgeInfo
+                    where kvp.Value.IsBetween(vertex1, vertex2)
+                    select kvp.Key).ToArray();
         }     
 
         public void AddVertex(IHydroVertexInfo vertex)
         {
+            if (hydroObjects.Contains(vertex))
+                throw new ArgumentException("Given vertex already exists!");
+
             hydroObjects.Add(vertex);
         }
 
         public void AddEdge(IHydroEdgeInfo edge)
         {
+            if (hydroObjects.Contains(edge))
+                throw new ArgumentException("Given edge already exists!");
+
+            hydroObjectGraphEdgeInfo.Add(edge, new HydroObjectGraphEdgeInfo());
             hydroObjects.Add(edge);
         }
 
         public void Clear()
         {
             hydroObjects.Clear();
+            hydroObjectGraphEdgeInfo.Clear();
         }
 
         public bool Remove(IHydroObjectInfo item)
         {
+            if (item is IHydroEdgeInfo)
+                hydroObjectGraphEdgeInfo.Remove(item as IHydroEdgeInfo);
+
             return hydroObjects.Remove(item);
         }
 
@@ -150,7 +154,7 @@ namespace HydroSystemModelPreProcess
             if (vertex != null && !hydroObjects.Contains(vertex))
                 throw new ArgumentException("Given HydroVertex not contained in HydroObjectGraph!");
 
-            edge.Vertex1 = vertex;
+            hydroObjectGraphEdgeInfo[edge].Vertex1 = vertex;
         }
 
         public void SetVertex2(IHydroEdgeInfo edge, IHydroVertexInfo vertex)
@@ -164,7 +168,7 @@ namespace HydroSystemModelPreProcess
             if (vertex != null && !hydroObjects.Contains(vertex))
                 throw new ArgumentException("Given HydroVertex not contained in HydroObjectGraph!");
 
-            edge.Vertex2 = vertex;
+            hydroObjectGraphEdgeInfo[edge].Vertex2 = vertex;
         }
 
         public void ConnectVertexs(IHydroEdgeInfo edge, IHydroVertexInfo vertex1, IHydroVertexInfo vertex2)
@@ -181,12 +185,71 @@ namespace HydroSystemModelPreProcess
 
         public void DisConnectVertexs(IHydroVertexInfo vertex1, IHydroVertexInfo vertex2)
         {
-            var edges = from o in hydroObjects
-                        where o is IHydroEdgeInfo && (o as IHydroEdgeInfo).IsBetween(vertex1, vertex2)
-                        select o as IHydroEdgeInfo;
+            var edges = from kvp in hydroObjectGraphEdgeInfo
+                        where kvp.Value.IsBetween(vertex1, vertex2)
+                        select kvp.Key;
 
             foreach (var e in edges)
                 DisConnectVertexs(e);
+        }
+
+        #endregion
+
+        #region HydroObjectGraphEdgeInfo
+
+        protected class HydroObjectGraphEdgeInfo
+        {
+            private IHydroVertexInfo vertex1;
+
+            public IHydroVertexInfo Vertex1
+            {
+                get { return vertex1; }
+                set
+                {
+                    if (vertex2 == value && value != null)
+                        throw new ArgumentException("Vertexs of HydroEdgeInfo must be different!");
+
+                    vertex1 = value;
+                }
+            }
+
+            private IHydroVertexInfo vertex2;
+
+            public IHydroVertexInfo Vertex2
+            {
+                get { return vertex2; }
+                set
+                {
+                    if (vertex1 == value && value != null)
+                        throw new ArgumentException("Vertexs of HydroEdgeInfo must be different!");
+
+                    vertex2 = value;
+                }
+            }
+
+            public IHydroVertexInfo[] GetVertexs()
+            {
+                return new IHydroVertexInfo[] { Vertex1, Vertex2 };
+            }
+
+            public bool IsBetween(IHydroVertexInfo v1, IHydroVertexInfo v2)
+            {
+                if (v1 == null || v2 == null)
+                    return false;
+
+                if (Vertex1 == v1 && Vertex2 == v2 || Vertex2 == v1 && Vertex1 == v2)
+                    return true;
+                else
+                    return false;
+            }
+
+            public bool IsConnectedTo(IHydroVertexInfo vertex)
+            {
+                if (vertex == Vertex1 || vertex == Vertex2)
+                    return true;
+                else
+                    return false;
+            }
         }
 
         #endregion

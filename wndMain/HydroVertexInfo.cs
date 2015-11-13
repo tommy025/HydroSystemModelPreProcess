@@ -1,14 +1,28 @@
 ﻿using System;
+using System.Windows.Data;
 using System.Windows.Shapes;
 
 namespace HydroSystemModelPreProcess
 {
     public class HydroVertexInfo : HydroObjectInfo, IHydroVertexInfo
     {
+        #region StaticMethods
+
+        public static HydroVertexInfo CreateHydroVertexInfo(Rectangle vertex, Type hydroObjectType)
+        {
+            var info = new HydroVertexInfo(vertex, hydroObjectType);
+            vertex.DataContext = info;
+            return info;
+        }
+
+        #endregion
+
         #region Constructors
 
-        public HydroVertexInfo(Shape _element, Type _hydroObjectType) : base(_element, _hydroObjectType)
-        { }
+        protected HydroVertexInfo(Rectangle _vertex, Type _hydroObjectType) : base(_hydroObjectType)
+        {
+            vertex = _vertex;
+        }
 
         #endregion
 
@@ -18,13 +32,11 @@ namespace HydroSystemModelPreProcess
 
         private double top;
 
-        private double height;
-
-        private double width;
+        private readonly Rectangle vertex;
 
         #endregion
 
-        #region IHydroVertexInfo
+        #region Properties
 
         public double Left
         {
@@ -46,24 +58,18 @@ namespace HydroSystemModelPreProcess
             }
         }
 
-        public double Height
+        public override Shape Element
         {
-            get { return height; }
-            set
-            {
-                height = value;
-                TriggerPropertyChanged(nameof(Height));
-            }
+            get { return vertex; }
         }
 
-        public double Width
+        #endregion
+
+        #region IHydroVertexInfo
+
+        public Rectangle Vertex
         {
-            get { return width; }
-            set
-            {
-                width = value;
-                TriggerPropertyChanged(nameof(Width));
-            }
+            get { return vertex; }
         }
 
         #endregion

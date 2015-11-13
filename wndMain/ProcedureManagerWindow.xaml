@@ -36,12 +36,12 @@
         </GroupBox>
 
         <GroupBox Grid.Column="2" Header="水力对象列表">
-            <ListBox Name="lbxHydroObjects" Margin="2" DisplayMemberPath="Key.DataContext.Name"
-                     ItemsSource="{Binding ElementName=lbxProcedures, Path=SelectedItem.ElementDataDictionary}"></ListBox>
+            <ListBox Name="lbxHydroObjects" Margin="2" DisplayMemberPath="Tag.Name"
+                     ItemsSource="{Binding ElementName=lbxProcedures, Path=SelectedItem}"></ListBox>
         </GroupBox>
 
         <GroupBox Grid.Column="3" Name="gbxHydroObjectProperties" Header="水力对象属性"
-                  DataContext="{Binding ElementName=lbxHydroObjects, Path=SelectedItem.Value}"
-                  Content="{Binding ElementName=lbxHydroObjects, Path=SelectedItem.Key.DataContext.PropertySettingControl}"/>
+                  DataContext="{Binding ElementName=lbxHydroObjects, Path=SelectedItem}"
+                  Content="{Binding ElementName=lbxHydroObjects, Path=SelectedItem.Tag.PropertySettingControl}"/>
     </Grid>
 </Window>

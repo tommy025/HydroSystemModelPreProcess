@@ -122,9 +122,9 @@ namespace HydroSystemModelPreProcess
 
         private void RemoveItems(IEnumerable items)
         {
-            var query = from o in hydroObjects
-                        join IHydroObjectInfo i in items on o.Tag equals i
-                        select o;
+            var query = (from o in hydroObjects
+                         join IHydroObjectInfo i in items on o.Tag equals i
+                         select o).ToArray();
 
             foreach (var o in query)
             {

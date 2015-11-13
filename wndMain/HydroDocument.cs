@@ -1,25 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
-using System.Xml;
-using System.Xml.Linq;
-using System.IO;
-using HydroSystemModelPreProcess.HydroObjects;
-using Microsoft.Win32;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.Collections;
+using System.Collections.ObjectModel;
+using System.Collections.Generic;
+using System.Collections.Specialized;
+using HydroSystemModelPreProcess.HydroObjects;
 
 namespace HydroSystemModelPreProcess
 {
@@ -70,20 +57,24 @@ namespace HydroSystemModelPreProcess
         public Rectangle AddConnectNode(Point position)
         {
             var cNode = HydroResourceHelper.CreateVisualElement(typeof(ConnectNode)) as Rectangle;
-            var cNodeInfo = new HydroVertexInfo(cNode, typeof(ConnectNode));
+            var cNodeInfo = HydroVertexInfo.CreateHydroVertexInfo(cNode, typeof(ConnectNode));
+            cNodeInfo.Left = position.X - cNode.Width / 2;
+            cNodeInfo.Top = position.Y - cNode.Height / 2;
             hydroObjectGraph.AddVertex(cNodeInfo);
-            hydroObjectInfoList.Add(cNodeInfo);
-            MoveVertex(cNode, position);
+            hydroObjectInfoList.Add(cNodeInfo); 
             return cNode;
         }
 
-        public Line AddPressurePipe()
+        public Line AddPressurePipe(Point point1, Point point2)
         {
             var pPipe = HydroResourceHelper.CreateVisualElement(typeof(PressurePipe)) as Line;
-            var pPipeInfo = new HydroEdgeInfo(pPipe, typeof(PressurePipe));
+            var pPipeInfo = HydroEdgeInfo.CreateHydroEdgeInfo(pPipe, typeof(PressurePipe));
+            pPipeInfo.X1 = point1.X;
+            pPipeInfo.Y1 = point1.Y;
+            pPipeInfo.X2 = point2.X;
+            pPipeInfo.Y2 = point2.Y;
             hydroObjectGraph.AddEdge(pPipeInfo);
             hydroObjectInfoList.Add(pPipeInfo);
-            Canvas.SetZIndex(pPipe, -1);
             return pPipe;
         }
 
@@ -94,83 +85,75 @@ namespace HydroSystemModelPreProcess
             return hydroObjectInfoList.Remove(hydroObjectInfo);
         }
 
-        public void MoveVertex(Rectangle vertex, Point position)
-        {
-            Canvas.SetLeft(vertex, position.X - vertex.Width / 2);
-            Canvas.SetTop(vertex, position.Y - vertex.Height / 2);
-
-            var vertexInfo = hydroObjectInfoList.Single(i => i.Element == vertex) as IHydroVertexInfo;
-            var connectEdges = hydroObjectGraph.GetEdges(vertexInfo);
-            foreach (var edge in connectEdges)
-            {
-                if (hydroObjectGraph.GetVertex1(edge) == vertexInfo)
-                {
-                    edge.X1 = position.X + vertex.Width / 2;
-                    edge.Y1 = position.Y + vertex.Height / 2;
-                }
-                else
-                {
-                    edge.X2 = position.X + vertex.Width / 2;
-                    edge.Y2 = position.Y + vertex.Height / 2;
-                }
-            }
-        }
-
-        public void SetPipeFirstPoint(Line edge, Point position)
-        {
-            edge.X1 = position.X;
-            edge.Y1 = position.Y;
-        }
-
-        public void SetPipeSecondPoint(Line edge, Point position)
-        {
-            edge.X2 = position.X;
-            edge.Y2 = position.Y;            
-        }
-
-        public bool SetPipeFirstVertex(Line edge, Rectangle vertex)
+        public Line[] GetConnectedEdges(Rectangle vertex)
         {
             if (vertex == null)
+                return new Line[] { };
+
+            var hydroVertexInfo = hydroObjectInfoList.Single(i => i.Element == vertex) as IHydroVertexInfo;
+            var edgeInfoList = hydroObjectGraph.GetEdges(hydroVertexInfo);
+            return edgeInfoList.Select(e => e.Edge).ToArray();
+        }
+
+        public Line[] GetConnectedEdges(Rectangle vertex1, Rectangle vertex2)
+        {
+            if (vertex1 == null || vertex2 == null)
+                return new Line[] { };
+
+            var hydroVertexInfo1 = hydroObjectInfoList.Single(i => i.Element == vertex1) as IHydroVertexInfo;
+            var hydroVertexInfo2 = hydroObjectInfoList.Single(i => i.Element == vertex2) as IHydroVertexInfo;
+            var edgeInfoList = hydroObjectGraph.GetEdges(hydroVertexInfo1, hydroVertexInfo2);
+            return edgeInfoList.Select(e => e.Edge).ToArray();
+        }
+
+        public Rectangle GetVertex1(Line edge)
+        {
+            var hydroEdgeInfo = hydroObjectInfoList.Single(i => i.Element == edge) as IHydroEdgeInfo;
+            var vertexInfo = hydroObjectGraph.GetVertex1(hydroEdgeInfo);
+            return vertexInfo == null ? null : vertexInfo.Vertex;
+        }
+
+        public Rectangle GetVertex2(Line edge)
+        {
+            var hydroEdgeInfo = hydroObjectInfoList.Single(i => i.Element == edge) as IHydroEdgeInfo;
+            var vertexInfo = hydroObjectGraph.GetVertex2(hydroEdgeInfo);
+            return vertexInfo == null ? null : vertexInfo.Vertex;
+        }
+
+        public bool SetVertex1(Line edge, Rectangle vertex)
+        {
+            var hydroEdgeInfo = hydroObjectInfoList.Single(i => i.Element == edge) as IHydroEdgeInfo;            
+            if (vertex == null)
             {
-                hydroObjectGraph.SetVertex1(edge, null);
+                hydroObjectGraph.SetVertex1(hydroEdgeInfo, null);
                 return true;
             }
 
-            if (hydroObjectGraph.GetVertex2(edge) == vertex)
+            var hydroVertexInfo = hydroObjectInfoList.Single(i => i.Element == vertex) as IHydroVertexInfo;
+            if (hydroObjectGraph.GetVertex2(hydroEdgeInfo) == hydroVertexInfo)
                 return false;
 
-            if (hydroObjectGraph.GetVertex1(edge) != vertex)
-                hydroObjectGraph.SetVertex1(edge, vertex);
-
-            SetPipeFirstPoint(edge, new Point(
-                Canvas.GetLeft(vertex) + vertex.Width / 2,
-                Canvas.GetTop(vertex) + vertex.Height / 2));
+            if (hydroObjectGraph.GetVertex1(hydroEdgeInfo) != hydroVertexInfo)
+                hydroObjectGraph.SetVertex1(hydroEdgeInfo, hydroVertexInfo);
 
             return true;
         }
 
-        public bool SetPipeSecondVertex(Line edge, Rectangle vertex)
+        public bool SetVertex2(Line edge, Rectangle vertex)
         {
+            var hydroEdgeInfo = hydroObjectInfoList.Single(i => i.Element == edge) as IHydroEdgeInfo;           
             if (vertex == null)
             {
-                hydroObjectGraph.SetVertex2(edge, null);
+                hydroObjectGraph.SetVertex2(hydroEdgeInfo, null);
                 return true;
             }
 
-            if (hydroObjectGraph.GetVertex1(edge) == vertex)
+            var hydroVertexInfo = hydroObjectInfoList.Single(i => i.Element == vertex) as IHydroVertexInfo;
+            if (hydroObjectGraph.GetVertex1(hydroEdgeInfo) == hydroVertexInfo)
                 return false;
 
-            var otherVertex = hydroObjectGraph.GetVertex1(edge);
-            if (hydroObjectGraph.IsConnected(otherVertex, vertex) &&
-                !hydroObjectGraph.IsBetween(edge, vertex, otherVertex))
-                return false;
-
-            if (hydroObjectGraph.GetVertex2(edge) != vertex)
-                hydroObjectGraph.SetVertex2(edge, vertex);
-
-            SetPipeSecondPoint(edge, new Point(
-                Canvas.GetLeft(vertex) + vertex.Width / 2,
-                Canvas.GetTop(vertex) + vertex.Height / 2));
+            if (hydroObjectGraph.GetVertex2(hydroEdgeInfo) != hydroVertexInfo)
+                hydroObjectGraph.SetVertex2(hydroEdgeInfo, hydroVertexInfo);
 
             return true;
         }

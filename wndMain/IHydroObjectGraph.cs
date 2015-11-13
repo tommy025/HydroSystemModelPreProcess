@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace HydroSystemModelPreProcess
+﻿namespace HydroSystemModelPreProcess
 {
     public interface IHydroObjectGraph : IReadOnlyHydroObjectGraph
     {
@@ -16,9 +10,9 @@ namespace HydroSystemModelPreProcess
 
         bool Remove(IHydroObjectInfo item);
 
-        IHydroVertexInfo SetVertex1(IHydroEdgeInfo edge);
+        void SetVertex1(IHydroEdgeInfo edge, IHydroVertexInfo vertex);
 
-        IHydroVertexInfo SetVertex2(IHydroEdgeInfo edge);
+        void SetVertex2(IHydroEdgeInfo edge, IHydroVertexInfo vertex);
 
         void ConnectVertexs(IHydroEdgeInfo edge, IHydroVertexInfo vertex1, IHydroVertexInfo vertex2);
 
